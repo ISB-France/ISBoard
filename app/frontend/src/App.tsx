@@ -3,6 +3,7 @@ import LoginPage from "./pages/LoginPage";
 import AuthCallback from "./pages/AuthCallback";
 import Dashboard from "./pages/Dashboard";
 import Interviews from "./pages/Interviews";
+import InterviewDetail from "./pages/InterviewDetail";
 import InterviewForm from "./pages/InterviewForm";
 import Users from "./pages/Users";
 
@@ -24,6 +25,7 @@ function App() {
       <Route path="/" element={<Dashboard />} />
       <Route path="/interviews" element={<Interviews />} />
       <Route path="/interviews/new" element={<InterviewForm />} />
+      <Route path="/interviews/:id" element={<InterviewDetail />} />
       <Route path="/interviews/:id/edit" element={<InterviewForm />} />
       <Route path="/users" element={<Users />} />
       <Route path="*" element={<Navigate to="/" />} />

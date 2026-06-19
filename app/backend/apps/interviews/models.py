@@ -1,5 +1,6 @@
 from django.conf import settings
 from django.db import models
+from .templates import TEMPLATES
 
 
 class Interview(models.Model):
@@ -32,6 +33,18 @@ class Interview(models.Model):
 
     class Meta:
         ordering = ["-due_date"]
+
+    def get_content_template(self):
+        return TEMPLATES.get(self.type, {"sections": []})
+
+    def initialize_content(self):
+        if not self.content or not self.content.get("sections"):
+            self.content = self.get_content_template()
+
+    def save(self, *args, **kwargs):
+        if not self.content or not self.content.get("sections"):
+            self.content = self.get_content_template()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.get_type_display()} - {self.employee}"

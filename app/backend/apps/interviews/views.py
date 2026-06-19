@@ -1,10 +1,11 @@
-from django.db.models import Count, Q
+from django.db.models import Count
 from django.utils import timezone
 from rest_framework import viewsets, permissions, filters
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Interview
 from .serializers import InterviewSerializer
+from .templates import TEMPLATES
 from apps.users.models import User
 
 
@@ -63,3 +64,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
             users = User.objects.filter(is_active=True).values("id", "first_name", "last_name", "email")
             return Response(list(users))
         return Response([])
+
+    @action(detail=False, methods=["get"])
+    def templates(self, request):
+        return Response(TEMPLATES)
