@@ -1,71 +1,79 @@
 import { useQuery } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
+import { FileText, Clock, AlertTriangle, CheckCircle2, CalendarClock } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import AppLayout from "../components/AppLayout";
+import LoadingScreen from "../components/LoadingScreen";
+import ErrorScreen from "../components/ErrorScreen";
 import api from "../api";
-import Layout from "../Layout";
 import type { InterviewStats } from "../types";
 
 export default function Dashboard() {
-  const navigate = useNavigate();
-  const { data: stats, isLoading } = useQuery<InterviewStats>({
+  const { data: stats, isLoading, error, refetch } = useQuery<InterviewStats>({
     queryKey: ["interview-stats"],
     queryFn: () => api.get("/interviews/stats/").then((r) => r.data),
   });
 
-  if (isLoading) return <Layout><p>Chargement...</p></Layout>;
+  if (isLoading) return <LoadingScreen />;
+  if (error) return <ErrorScreen message="Impossible de charger les statistiques" onRetry={refetch} />;
 
   const statusMap: Record<string, number> = {};
   stats?.by_status.forEach((s) => { statusMap[s.status] = s.count; });
 
+  const cards = [
+    { label: "Total entretiens", value: stats?.total ?? 0, icon: FileText, color: "" },
+    { label: "Brouillons", value: statusMap["draft"] ?? 0, icon: Clock, color: "text-isb-sand-mid" },
+    { label: "En cours", value: statusMap["in_progress"] ?? 0, icon: CalendarClock, color: "text-blue-500" },
+    { label: "En retard", value: stats?.overdue ?? 0, icon: AlertTriangle, color: "text-isb-coral" },
+    { label: "Terminés", value: statusMap["completed"] ?? 0, icon: CheckCircle2, color: "text-green-600" },
+    { label: "À venir", value: stats?.upcoming ?? 0, icon: Clock, color: "text-isb-terracotta" },
+  ];
+
   return (
-    <Layout>
-      <h1 style={{ marginBottom: 24 }}>Tableau de bord</h1>
-      <div className="stats-grid">
-        <div className="stat-card">
-          <h3>Total entretiens</h3>
-          <div className="value">{stats?.total ?? 0}</div>
-        </div>
-        <div className="stat-card warning">
-          <h3>Brouillon</h3>
-          <div className="value">{statusMap["draft"] ?? 0}</div>
-        </div>
-        <div className="stat-card">
-          <h3>En cours</h3>
-          <div className="value">{statusMap["in_progress"] ?? 0}</div>
-        </div>
-        <div className="stat-card danger">
-          <h3>En retard</h3>
-          <div className="value">{stats?.overdue ?? 0}</div>
-        </div>
-        <div className="stat-card success">
-          <h3>Terminés</h3>
-          <div className="value">{statusMap["completed"] ?? 0}</div>
-        </div>
-        <div className="stat-card">
-          <h3>À venir</h3>
-          <div className="value">{stats?.upcoming ?? 0}</div>
-        </div>
+    <AppLayout>
+      <h1 className="mb-6 font-display text-2xl font-bold">Tableau de bord</h1>
+
+      <div className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
+        {cards.map((card) => (
+          <Card key={card.label}>
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <card.icon className={`h-8 w-8 ${card.color || "text-isb-brown"}`} />
+              </div>
+              <p className="mt-2 font-display text-2xl font-bold">{card.value}</p>
+              <p className="text-xs text-muted-foreground">{card.label}</p>
+            </CardContent>
+          </Card>
+        ))}
       </div>
-      <div className="card">
-        <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 16 }}>
-          <h2>Répartition par type</h2>
-        </div>
-        <table>
-          <thead>
-            <tr>
-              <th>Type</th>
-              <th>Nombre</th>
-            </tr>
-          </thead>
-          <tbody>
-            {stats?.by_type.map((t) => (
-              <tr key={t.type}>
-                <td><span className={`badge ${t.type}`}>{t.type === "annual" ? "Annuel" : "Professionnel"}</span></td>
-                <td>{t.count}</td>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Répartition par type</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-border text-left text-xs font-semibold uppercase text-muted-foreground">
+                <th className="pb-3">Type</th>
+                <th className="pb-3">Nombre</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </Layout>
+            </thead>
+            <tbody>
+              {stats?.by_type.map((t) => (
+                <tr key={t.type} className="border-b border-border last:border-0">
+                  <td className="py-3">
+                    <Badge variant={t.type as "annual" | "professional"}>
+                      {t.type === "annual" ? "Annuel" : "Professionnel"}
+                    </Badge>
+                  </td>
+                  <td className="py-3 font-medium">{t.count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </CardContent>
+      </Card>
+    </AppLayout>
   );
 }

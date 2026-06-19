@@ -1,5 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { LogIn } from "lucide-react";
+import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import { Separator } from "../components/ui/separator";
 import api from "../api";
 
 export default function LoginPage() {
@@ -29,39 +33,42 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-box">
-        <img src="/logo.png" alt="ISB France" style={{ height: 48, marginBottom: 16 }} />
-        <h1>ISBoard</h1>
-        <p>Gestion des entretiens annuels et professionnels</p>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFAF5] p-4">
+      <div className="w-full max-w-sm">
+        <div className="mb-8 text-center">
+          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-isb-yellow">
+            <span className="font-display text-2xl font-bold text-isb-brown">I</span>
+          </div>
+          <h1 className="font-display text-2xl font-bold text-isb-brown">ISBoard</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Gestion des entretiens annuels et professionnels
+          </p>
+        </div>
 
-        <button onClick={handleMicrosoftLogin} style={{ marginBottom: 20 }}>
+        <Button className="w-full gap-2" size="lg" onClick={handleMicrosoftLogin}>
+          <LogIn className="h-4 w-4" />
           Se connecter avec Microsoft
-        </button>
+        </Button>
 
-        <hr style={{ border: "none", borderTop: "1px solid #333", margin: "20px 0" }} />
+        <div className="my-6 flex items-center gap-3">
+          <Separator className="flex-1" />
+          <span className="text-xs text-muted-foreground">ou</span>
+          <Separator className="flex-1" />
+        </div>
 
-        <form onSubmit={handleDevLogin}>
-          <p style={{ fontSize: 13, color: "#888", marginBottom: 8 }}>Mode développement</p>
-          <input
+        <form onSubmit={handleDevLogin} className="space-y-3">
+          <p className="text-xs text-muted-foreground">Mode développement</p>
+          <Input
             type="email"
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            style={{
-              padding: "10px 16px",
-              fontSize: 14,
-              borderRadius: 6,
-              border: "none",
-              width: 280,
-              marginBottom: 8,
-            }}
           />
-          {error && <p style={{ color: "#e74c3c", fontSize: 13 }}>{error}</p>}
-          <button type="submit" disabled={loading} style={{ width: 280 }}>
+          {error && <p className="text-xs text-destructive">{error}</p>}
+          <Button type="submit" disabled={loading} className="w-full" variant="outline">
             {loading ? "Connexion..." : "Connexion dev"}
-          </button>
+          </Button>
         </form>
       </div>
     </div>
