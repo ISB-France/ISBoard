@@ -45,6 +45,33 @@ class UserViewSet(viewsets.ReadOnlyModelViewSet):
         return User.objects.filter(id=self.request.user.id)
 
 
+class DevLoginView(APIView):
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        email = request.data.get("email", "").strip().lower()
+        if not email:
+            return Response({"error": "Email requis"}, status=status.HTTP_400_BAD_REQUEST)
+
+        user, created = User.objects.get_or_create(
+            email=email,
+            defaults={
+                "username": email,
+                "role": "rh" if User.objects.count() == 0 else "employee",
+            },
+        )
+        if created:
+            user.set_unusable_password()
+            user.save()
+
+        refresh = RefreshToken.for_user(user)
+        return Response({
+            "access": str(refresh.access_token),
+            "refresh": str(refresh),
+            "user": UserMeSerializer(user).data,
+        })
+
+
 class LogoutView(APIView):
     permission_classes = [permissions.IsAuthenticated]
 
