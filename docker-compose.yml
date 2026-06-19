@@ -6,24 +6,26 @@ services:
       POSTGRES_USER: ${DB_USER:-isboard}
       POSTGRES_PASSWORD: ${DB_PASSWORD:-isboard}
     ports:
-      - "5432:5432"
+      - "5434:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
 
   backend:
     build: ./app/backend
+    restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "8002:8000"
     env_file: .env
     depends_on:
-      - db
+      db:
+        condition: service_started
     volumes:
       - ./app/backend:/app
 
   frontend:
     build: ./app/frontend
     ports:
-      - "5173:5173"
+      - "5175:5173"
     depends_on:
       - backend
     volumes:
