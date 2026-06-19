@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ interview.get_type_display }} - {{ interview.employee.get_full_name }}</title>
+  <style>
+    @page { margin: 2cm; size: A4; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Calibri', 'Helvetica', Arial, sans-serif; font-size: 12pt; color: #000; line-height: 1.5; }
+    h1 { font-size: 18pt; text-align: center; margin-bottom: 4pt; }
+    .subtitle { text-align: center; color: #555; margin-bottom: 24pt; }
+    .info-table { width: 100%; margin-bottom: 24pt; }
+    .info-table td { padding: 4pt 8pt; border: 1px solid #ccc; }
+    .info-table td:first-child { font-weight: bold; width: 30%; background: #f5f5f5; }
+    h2 { font-size: 14pt; margin-bottom: 8pt; padding-bottom: 4pt; border-bottom: 2px solid #000; }
+    .section { margin-bottom: 20pt; page-break-inside: avoid; }
+    .question { margin-bottom: 12pt; }
+    .question-label { font-weight: bold; margin-bottom: 4pt; }
+    .question-answer { padding: 8pt; border: 1px solid #ddd; min-height: 24pt; white-space: pre-wrap; }
+    .rating { display: flex; gap: 4pt; }
+    .rating-dot { display: inline-block; width: 20pt; height: 20pt; border: 1px solid #000; text-align: center; line-height: 20pt; font-size: 10pt; }
+    .rating-dot.filled { background: #000; color: #fff; }
+    .signatures { margin-top: 40pt; display: flex; justify-content: space-between; }
+    .signature-box { width: 45%; }
+    .signature-box p { font-weight: bold; margin-bottom: 4pt; }
+    .signature-line { border-top: 1px solid #000; margin-top: 48pt; padding-top: 4pt; font-size: 10pt; }
+    @media print { .no-print { display: none; } }
+    .no-print { text-align: center; margin-bottom: 16pt; }
+    .no-print button { padding: 8pt 24pt; font-size: 12pt; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div class="no-print">
+    <button onclick="window.print()">Imprimer</button>
+    <button onclick="window.close()">Fermer</button>
+  </div>
+
+  <h1>{{ interview.get_type_display }}</h1>
+  <p class="subtitle">ISB France</p>
+
+  <table class="info-table">
+    <tr><td>Employé</td><td>{{ interview.employee.get_full_name|default:interview.employee.email }}</td></tr>
+    <tr><td>Manager</td><td>{{ interview.manager.get_full_name|default:interview.manager.email }}</td></tr>
+    <tr><td>Date limite</td><td>{{ interview.due_date|date:"d/m/Y" }}</td></tr>
+    <tr><td>Statut</td><td>{{ interview.get_status_display }}</td></tr>
+    {% if interview.employee.department %}
+    <tr><td>Service</td><td>{{ interview.employee.department }}</td></tr>
+    {% endif %}
+    {% if interview.employee.hire_date %}
+    <tr><td>Date d'embauche</td><td>{{ interview.employee.hire_date|date:"d/m/Y" }}</td></tr>
+    {% endif %}
+  </table>
+
+  {% for section in sections %}
+  <div class="section">
+    <h2>{{ section.title }}</h2>
+    {% for question in section.questions %}
+    <div class="question">
+      <div class="question-label">{{ question.label }}</div>
+      {% if question.type == "textarea" %}
+      <div class="question-answer">{{ question.answer|default:"—" }}</div>
+      {% elif question.type == "rating" %}
+      <div class="rating">
+        {% for i in "12345"|make_list %}
+        <div class="rating-dot{% if question.answer and forloop.counter <= question.answer %} filled{% endif %}">{{ forloop.counter }}</div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+
+  <div class="signatures">
+    <div class="signature-box">
+      <p>L'employé</p>
+      <div class="signature-line">Signature</div>
+    </div>
+    <div class="signature-box">
+      <p>Le manager</p>
+      <div class="signature-line">Signature</div>
+    </div>
+  </div>
+</body>
+</html>

@@ -94,6 +94,9 @@ export default function InterviewDetail() {
               </button>
             </>
           )}
+          <button className="btn btn-outline" onClick={() => window.open(`/api/interviews/${id}/print/`, "_blank")}>
+            Imprimer / PDF
+          </button>
           {interview.status === "in_progress" && (
             <button className="btn btn-primary" onClick={() => handleSave("completed")}>
               Finaliser

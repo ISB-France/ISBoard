@@ -1,4 +1,5 @@
 from django.db.models import Count
+from django.shortcuts import render
 from django.utils import timezone
 from rest_framework import viewsets, permissions, filters
 from rest_framework.decorators import action
@@ -68,3 +69,12 @@ class InterviewViewSet(viewsets.ModelViewSet):
     @action(detail=False, methods=["get"])
     def templates(self, request):
         return Response(TEMPLATES)
+
+    @action(detail=True, methods=["get"])
+    def print(self, request, pk=None):
+        interview = self.get_object()
+        sections = interview.content.get("sections", [])
+        return render(request, "interviews/print.html", {
+            "interview": interview,
+            "sections": sections,
+        })
