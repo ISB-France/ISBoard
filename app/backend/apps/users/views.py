@@ -2,14 +2,14 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.shortcuts import redirect
-from rest_framework import generics, permissions, status
+from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from mozilla_django_oidc.views import OIDCAuthenticationCallbackView as BaseCallback
 
 from .models import User
-from .serializers import UserMeSerializer
+from .serializers import UserMeSerializer, UserSerializer
 
 
 class OIDCCallbackView(BaseCallback):
@@ -33,6 +33,16 @@ class MeView(generics.RetrieveAPIView):
 
     def get_object(self):
         return self.request.user
+
+
+class UserViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = UserSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        if self.request.user.role == "rh":
+            return User.objects.filter(is_active=True).select_related("manager")
+        return User.objects.filter(id=self.request.user.id)
 
 
 class LogoutView(APIView):
