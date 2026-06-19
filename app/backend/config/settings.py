@@ -75,9 +75,12 @@ OIDC_OP_AUTHORIZATION_ENDPOINT = os.environ.get("OIDC_OP_AUTHORIZATION_ENDPOINT"
 OIDC_OP_TOKEN_ENDPOINT = os.environ.get("OIDC_OP_TOKEN_ENDPOINT")
 OIDC_OP_USER_ENDPOINT = os.environ.get("OIDC_OP_USER_ENDPOINT")
 OIDC_OP_JWKS_ENDPOINT = os.environ.get("OIDC_OP_JWKS_ENDPOINT")
+FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:5175")
+OIDC_REDIRECT_URI = os.environ.get("OIDC_REDIRECT_URI")
+OIDC_RP_SCOPES = "openid email profile"
 OIDC_RP_SIGN_ALGO = "RS256"
 OIDC_RP_IDP_SIGN_KEY = None
-OIDC_RP_CALLBACK_ENDPOINT = "/api/auth/callback/"
+OIDC_RP_CALLBACK_ENDPOINT = "/api/auth/callback"
 OIDC_CALLBACK_CLASS = "apps.users.views.OIDCCallbackView"
 LOGIN_URL = "oidc_authentication_init"
 LOGIN_REDIRECT_URL = "/"
@@ -110,3 +113,19 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
 SESSION_COOKIE_SECURE = not DEBUG
 CSRF_COOKIE_SECURE = not DEBUG
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+    },
+    "loggers": {
+        "apps.users.backends": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+    },
+}

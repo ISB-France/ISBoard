@@ -6,19 +6,52 @@ from rest_framework import generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
+from mozilla_django_oidc.views import OIDCAuthenticationRequestView as BaseRequestView
 from mozilla_django_oidc.views import OIDCAuthenticationCallbackView as BaseCallback
 
 from .models import User
 from .serializers import UserMeSerializer, UserSerializer
 
 
+from django.utils.crypto import get_random_string
+from mozilla_django_oidc.utils import add_state_and_verifier_and_nonce_to_session
+
+class OIDCAuthenticationRequestView(BaseRequestView):
+    def get(self, request):
+        redirect_uri = getattr(settings, "OIDC_REDIRECT_URI", None)
+        if not redirect_uri:
+            from django.urls import reverse
+            redirect_uri = request.build_absolute_uri(reverse("oidc_authentication_callback"))
+
+        state = get_random_string(32)
+        nonce = get_random_string(32)
+        params = {
+            "response_type": "code",
+            "scope": self.get_settings("OIDC_RP_SCOPES", "openid email"),
+            "client_id": self.get_settings("OIDC_RP_CLIENT_ID"),
+            "redirect_uri": redirect_uri,
+            "state": state,
+            "nonce": nonce,
+        }
+        params.update(self.get_extra_params(request))
+        add_state_and_verifier_and_nonce_to_session(request, state, params, None)
+        request.session["oidc_login_next"] = "/"
+
+        query = urlencode(params)
+        authorization_url = self.get_settings("OIDC_OP_AUTHORIZATION_ENDPOINT")
+        return redirect(f"{authorization_url}?{query}")
+
+    def get_extra_params(self, request):
+        return self.get_settings("OIDC_AUTH_REQUEST_EXTRA_PARAMS", {})
+
+
 class OIDCCallbackView(BaseCallback):
     def login_failure(self):
-        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        frontend_url = settings.FRONTEND_URL
         return redirect(f"{frontend_url}/login?error=auth_failed")
 
     def login_success(self):
-        frontend_url = getattr(settings, "FRONTEND_URL", "http://localhost:5173")
+        frontend_url = settings.FRONTEND_URL
         refresh = RefreshToken.for_user(self.request.user)
         query = urlencode({
             "access": str(refresh.access_token),
