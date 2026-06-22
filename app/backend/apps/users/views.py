@@ -52,7 +52,7 @@ class OIDCCallbackView(BaseCallback):
 
     def login_success(self):
         frontend_url = settings.FRONTEND_URL
-        refresh = RefreshToken.for_user(self.request.user)
+        refresh = RefreshToken.for_user(self.user)
         query = urlencode({
             "access": str(refresh.access_token),
             "refresh": str(refresh),
