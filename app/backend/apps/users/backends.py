@@ -18,19 +18,20 @@ class OIDCAuthenticationBackend(BaseOIDCBackend):
         return user
 
     def update_user(self, user, claims):
-        user.first_name = claims.get("given_name", "")
-        user.last_name = claims.get("family_name", "")
+        user.first_name = claims.get("given_name", "") or user.first_name
+        user.last_name = claims.get("family_name", "") or user.last_name
         email = claims.get("email") or claims.get("preferred_username")
         if email:
             user.email = email
 
         roles = claims.get("roles", [])
-        if "rh" in roles or "admin" in roles:
-            user.role = self.UserModel.Role.RH
-        elif "manager" in roles:
-            user.role = self.UserModel.Role.MANAGER
-        else:
-            user.role = self.UserModel.Role.EMPLOYEE
+        if roles:
+            if "rh" in roles or "admin" in roles:
+                user.role = self.UserModel.Role.RH
+            elif "manager" in roles:
+                user.role = self.UserModel.Role.MANAGER
+            else:
+                user.role = self.UserModel.Role.EMPLOYEE
 
         user.save()
         return user

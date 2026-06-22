@@ -13,7 +13,7 @@ from apps.users.models import User
 class IsManagerOrRH(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action == "stats":
-            return request.user.role in ("rh", "manager")
+            return True
         return request.user.role in ("rh", "manager")
 
 
