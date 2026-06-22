@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { Save, CheckCircle2, Download, PenSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
@@ -8,7 +9,7 @@ import { Textarea } from "../components/ui/textarea";
 import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import api from "../api";
-import type { Interview } from "../types";
+import type { Interview, User } from "../types";
 
 type Question = {
   id: string;
@@ -37,6 +38,11 @@ export default function InterviewDetail() {
   const [interview, setInterview] = useState<Interview | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [saving, setSaving] = useState(false);
+
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ["me"],
+    queryFn: () => api.get("/auth/me/").then((r) => r.data),
+  });
 
   useEffect(() => {
     if (!id) return;
@@ -89,7 +95,12 @@ export default function InterviewDetail() {
 
   if (!interview) return <LoadingScreen />;
 
-  const isReadOnly = interview.status === "completed" || interview.status === "signed" || interview.status === "cancelled";
+  const isManagerOrRh = currentUser?.role === "admin" || currentUser?.role === "rh" || currentUser?.manager === currentUser?.id;
+  const isOwn = interview.employee === currentUser?.id;
+  const hasNoManager = currentUser && !currentUser.manager;
+  const canEdit = currentUser?.role === "admin" || currentUser?.role === "rh" || interview.manager === currentUser?.id || (isOwn && hasNoManager);
+  const isReadOnly = !canEdit || interview.status === "completed" || interview.status === "signed" || interview.status === "cancelled";
+
 
   return (
     <AppLayout>

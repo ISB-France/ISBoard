@@ -32,6 +32,7 @@ const statusLabel: Record<string, string> = {
 export default function Interviews() {
   const navigate = useNavigate();
   const [type, setType] = useState("");
+  const [scope, setScope] = useState("");
   const [showHistory, setShowHistory] = useState(false);
 
   const { data: currentUser } = useQuery<User>({
@@ -42,9 +43,11 @@ export default function Interviews() {
   const statusParam = showHistory ? "completed,signed" : "draft,in_progress";
 
   const { data: interviews, isLoading, error, refetch } = useQuery<Interview[]>({
-    queryKey: ["interviews", type, showHistory],
+    queryKey: ["interviews", type, scope, showHistory],
     queryFn: () =>
-      api.get("/interviews/", { params: { type, status: statusParam } }).then((r) => r.data),
+      api.get("/interviews/", {
+        params: { type, status: statusParam, scope: scope || undefined, ordering: showHistory ? "-updated_at" : undefined },
+      }).then((r) => r.data),
   });
 
   if (isLoading) return <LoadingScreen />;
@@ -54,13 +57,26 @@ export default function Interviews() {
     <AppLayout>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Entretiens</h1>
-        <Button onClick={() => navigate("/interviews/new")} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nouvel entretien
-        </Button>
+        {(currentUser?.role === "admin" || currentUser?.role === "rh" || currentUser?.role === "manager") && (
+          <Button onClick={() => navigate("/interviews/new")} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nouvel entretien
+          </Button>
+        )}
       </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
+        {currentUser?.role === "manager" && (
+          <select
+            value={scope}
+            onChange={(e) => setScope(e.target.value)}
+            className="h-10 rounded-md border border-border bg-white px-3 text-sm"
+          >
+            <option value="">Mes entretiens</option>
+            <option value="direct">N-1</option>
+            <option value="team">N-N</option>
+          </select>
+        )}
         <select
           value={type}
           onChange={(e) => setType(e.target.value)}
@@ -73,7 +89,7 @@ export default function Interviews() {
           <option value="forfait">Forfait jours</option>
           <option value="fin_carriere">Fin de carrière</option>
         </select>
-        <div className="flex rounded-md border border-border">
+        <div className="inline-flex rounded-md border border-border">
           <button
             className={`px-4 py-2 text-sm font-medium transition-colors ${!showHistory ? "bg-isb-yellow text-isb-brown" : "bg-white text-muted-foreground hover:bg-muted/50"}`}
             onClick={() => setShowHistory(false)}
@@ -149,16 +165,18 @@ export default function Interviews() {
                         PDF
                       </Button>
                     ) : (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          navigate(`/interviews/${iv.id}/edit`);
-                        }}
-                      >
-                        Modifier
-                      </Button>
+                      (currentUser?.role === "admin" || currentUser?.role === "rh" || currentUser?.role === "manager") && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/interviews/${iv.id}/edit`);
+                          }}
+                        >
+                          Modifier
+                        </Button>
+                      )
                     )}
                   </td>
                 </tr>

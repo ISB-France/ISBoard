@@ -6,28 +6,43 @@ from django.utils import timezone
 from rest_framework import viewsets, permissions, filters, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from weasyprint import HTML
 from .models import Campaign, Interview, InterviewTemplate
 from .serializers import CampaignSerializer, InterviewSerializer, InterviewTemplateSerializer
 from .templates import TEMPLATES
 from apps.users.models import RH_ROLES, User
 
 
-class IsRHOrAdmin(permissions.BasePermission):
+class InterviewPermission(permissions.BasePermission):
     def has_permission(self, request, view):
         if view.action == "stats":
             return True
-        if view.action in ("update", "partial_update", "destroy"):
+        basename = getattr(view, 'basename', '')
+        if basename in ('interviewtemplate', 'campaign'):
+            return request.user.role in ("admin", "rh", "manager")
+        if view.action in ("create", "destroy"):
             return request.user.role in RH_ROLES
-        return request.user.role in ("admin", "rh", "manager")
+        return True
+
+    def has_object_permission(self, request, view, obj):
+        if request.user.role in RH_ROLES:
+            return True
+        if view.action in ("retrieve",):
+            return obj.employee == request.user or obj.manager == request.user
+        if view.action in ("update", "partial_update"):
+            if obj.manager == request.user:
+                return True
+            if obj.employee == request.user and not obj.employee.manager:
+                return True
+            return False
+        return False
 
 
 class InterviewViewSet(viewsets.ModelViewSet):
     serializer_class = InterviewSerializer
-    permission_classes = [permissions.IsAuthenticated, IsRHOrAdmin]
+    permission_classes = [permissions.IsAuthenticated, InterviewPermission]
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
     search_fields = ["employee__first_name", "employee__last_name", "employee__email"]
-    ordering_fields = ["due_date", "created_at", "status"]
+    ordering_fields = ["due_date", "created_at", "updated_at", "status"]
     ordering = ["-due_date"]
 
     def get_queryset(self):
@@ -37,6 +52,8 @@ class InterviewViewSet(viewsets.ModelViewSet):
             qs = qs.all()
         elif user.role == "manager":
             qs = qs.filter(manager=user)
+        elif user.role == "employee" and not user.manager:
+            qs = qs.filter(employee=user)
         else:
             qs = qs.filter(employee=user)
 
@@ -47,6 +64,22 @@ class InterviewViewSet(viewsets.ModelViewSet):
         if status_filter:
             status_list = status_filter.split(",")
             qs = qs.filter(status__in=status_list)
+
+        scope = self.request.query_params.get("scope")
+        if scope == "own" and user.role not in RH_ROLES:
+            qs = qs.filter(manager=user)
+        elif scope == "direct" and user.role not in RH_ROLES:
+            subordinates = User.objects.filter(manager=user).values_list("id", flat=True)
+            qs = qs.filter(employee_id__in=subordinates)
+        elif scope == "team" and user.role not in RH_ROLES:
+            from apps.users.views import get_subordinate_ids
+            ids = get_subordinate_ids(user.id)
+            if ids:
+                ids.add(user.id)
+                qs = qs.filter(employee_id__in=ids)
+            else:
+                qs = qs.none()
+
         return qs
 
     def perform_create(self, serializer):
@@ -86,6 +119,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=["get"])
     def pdf(self, request, pk=None):
+        from weasyprint import HTML
         interview = self.get_object()
         sections = interview.content.get("sections", [])
         html = render_to_string("interviews/print.html", {
@@ -103,16 +137,22 @@ class InterviewViewSet(viewsets.ModelViewSet):
 class InterviewTemplateViewSet(viewsets.ModelViewSet):
     queryset = InterviewTemplate.objects.all()
     serializer_class = InterviewTemplateSerializer
-    permission_classes = [permissions.IsAuthenticated, IsRHOrAdmin]
+    permission_classes = [permissions.IsAuthenticated, InterviewPermission]
 
 
 class CampaignViewSet(viewsets.ModelViewSet):
     queryset = Campaign.objects.prefetch_related("interviews")
     serializer_class = CampaignSerializer
-    permission_classes = [permissions.IsAuthenticated, IsRHOrAdmin]
+    permission_classes = [permissions.IsAuthenticated, InterviewPermission]
 
     def perform_create(self, serializer):
         serializer.save()
+
+    def perform_update(self, serializer):
+        old = self.get_object()
+        new = serializer.save()
+        if old.due_date != new.due_date:
+            new.interviews.all().update(due_date=new.due_date)
 
     @action(detail=True, methods=["post"])
     def generate(self, request, pk=None):
@@ -143,6 +183,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
                 employee=user,
                 type=template.type,
                 defaults={
+                    "template": template,
                     "content": {"sections": list(template.sections)},
                     "due_date": campaign.due_date,
                     "manager": user.manager or request.user,

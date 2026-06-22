@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Plus } from "lucide-react";
@@ -8,15 +9,26 @@ import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import ErrorScreen from "../components/ErrorScreen";
 import api from "../api";
-import type { Campaign } from "../types";
+import type { Campaign, User } from "../types";
 
 export default function Campaigns() {
   const navigate = useNavigate();
+  const [showHistory, setShowHistory] = useState(false);
+
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ["me"],
+    queryFn: () => api.get("/auth/me/").then((r) => r.data),
+  });
 
   const { data: campaigns, isLoading, error, refetch } = useQuery<Campaign[]>({
     queryKey: ["campaigns"],
     queryFn: () => api.get("/campaigns/").then((r) => r.data),
   });
+
+  const today = new Date().toISOString().slice(0, 10);
+  const filtered = campaigns?.filter((c) =>
+    showHistory ? c.due_date < today : c.due_date >= today,
+  );
 
   if (isLoading) return <LoadingScreen />;
   if (error) return <ErrorScreen message="Impossible de charger les campagnes" onRetry={refetch} />;
@@ -25,10 +37,29 @@ export default function Campaigns() {
     <AppLayout>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Campagnes</h1>
-        <Button onClick={() => navigate("/campaigns/new")} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Nouvelle campagne
-        </Button>
+        {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
+          <Button onClick={() => navigate("/campaigns/new")} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nouvelle campagne
+          </Button>
+        )}
+      </div>
+
+      <div className="mb-6 flex flex-wrap items-center gap-3">
+        <div className="inline-flex rounded-md border border-border">
+          <button
+            className={`px-4 py-2 text-sm font-medium transition-colors ${!showHistory ? "bg-isb-yellow text-isb-brown" : "bg-white text-muted-foreground hover:bg-muted/50"}`}
+            onClick={() => setShowHistory(false)}
+          >
+            En cours
+          </button>
+          <button
+            className={`px-4 py-2 text-sm font-medium transition-colors ${showHistory ? "bg-isb-yellow text-isb-brown" : "bg-white text-muted-foreground hover:bg-muted/50"}`}
+            onClick={() => setShowHistory(true)}
+          >
+            Historique
+          </button>
+        </div>
       </div>
 
       <Card>
@@ -43,14 +74,14 @@ export default function Campaigns() {
               </tr>
             </thead>
             <tbody>
-              {campaigns?.length === 0 && (
+              {filtered?.length === 0 && (
                 <tr>
                   <td colSpan={4} className="px-6 py-8 text-center text-sm text-muted-foreground">
-                    Aucune campagne trouvée
+                    {showHistory ? "Aucune campagne passée" : "Aucune campagne en cours"}
                   </td>
                 </tr>
               )}
-              {campaigns?.map((c) => (
+              {filtered?.map((c) => (
                 <tr key={c.id} className="border-b border-border last:border-0">
                   <td className="px-6 py-3">
                     <button className="text-sm font-medium hover:underline" onClick={() => navigate(`/campaigns/${c.id}`)}>
@@ -64,9 +95,11 @@ export default function Campaigns() {
                     <Badge variant="secondary">{c.interview_count}</Badge>
                   </td>
                   <td className="px-6 py-3">
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/campaigns/${c.id}/edit`)}>
-                      Modifier
-                    </Button>
+                    {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/campaigns/${c.id}/edit`)}>
+                        Modifier
+                      </Button>
+                    )}
                   </td>
                 </tr>
               ))}

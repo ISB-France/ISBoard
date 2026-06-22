@@ -57,8 +57,12 @@ export default function Users() {
   const { data: allUsers } = useQuery<User[]>({
     queryKey: ["users-all"],
     queryFn: () => api.get("/users/").then((r) => r.data),
-    enabled: !!managerId,
   });
+
+  const getAllDescendants = (userId: number, all: User[]): User[] => {
+    const direct = all.filter((e) => e.manager === userId);
+    return [...direct, ...direct.flatMap((d) => getAllDescendants(d.id, all))];
+  };
 
   const currentManager = allUsers?.find((u) => String(u.id) === managerId);
 
@@ -176,7 +180,11 @@ export default function Users() {
                 </tr>
               )}
               {users?.map((u) => {
-                const hasSubordinates = allUsers?.some((e) => e.manager === u.id) ?? users?.some((e) => e.manager === u.id);
+                const subordinates = allUsers ? getAllDescendants(u.id, allUsers) : [];
+                const hasSubordinates = subordinates.length > 0;
+                const maxAvatars = 3;
+                const visible = subordinates.slice(0, maxAvatars);
+                const extra = subordinates.length - maxAvatars;
                 return (
                   <tr
                     key={u.id}
@@ -207,8 +215,27 @@ export default function Users() {
                     <td className="px-6 py-3 text-sm">{u.service_name || "-"}</td>
                     <td className="px-6 py-3 text-sm">{u.position_name || "-"}</td>
                     <td className="px-6 py-3 text-sm text-muted-foreground">{u.manager_name || "-"}</td>
-                    <td className="px-6 py-3 text-sm">{hasSubordinates ? `${users?.filter((e) => e.manager === u.id).length ?? 0} N-1` : "-"}</td>
-        {((currentUser?.role === "rh" || currentUser?.role === "admin") || currentUser?.role === "admin") && (
+                    <td className="px-6 py-3">
+                      {hasSubordinates ? (
+                        <div className="flex items-center">
+                          <div className="flex [&>*+*]:-ml-2.5">
+                            {visible.map((sub) => (
+                              <Avatar key={sub.id} className="h-7 w-7 border-2 border-white">
+                                <AvatarFallback className="bg-isb-yellow/70 text-isb-brown text-[10px] font-semibold">
+                                  {(sub.first_name?.[0] ?? "") + (sub.last_name?.[0] ?? "") || sub.email[0].toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            ))}
+                            {extra > 0 && (
+                              <div className="flex h-7 w-7 items-center justify-center rounded-full border-2 border-white bg-muted text-[10px] font-medium text-muted-foreground">
+                                +{extra}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      ) : "-"}
+                    </td>
+                    {(currentUser?.role === "rh" || currentUser?.role === "admin") && (
                       <td className="px-6 py-3">
                         <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/users/${u.id}/edit`); }}>
                           Modifier

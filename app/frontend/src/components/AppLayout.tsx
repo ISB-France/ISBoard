@@ -14,7 +14,7 @@ const navItems = [
   { to: "/interviews", icon: FileText, label: "Entretiens" },
   { to: "/campaigns", icon: Flag, label: "Campagnes", role: "rh" },
   { to: "/templates", icon: FileEdit, label: "Modèles", role: "rh" },
-  { to: "/users", icon: Users, label: "Utilisateurs", role: "rh" },
+  { to: "/users", icon: Users, label: "Utilisateurs" },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
