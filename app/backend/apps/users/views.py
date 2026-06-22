@@ -2,7 +2,11 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.shortcuts import redirect
+import csv
+import io
+
 from rest_framework import filters, generics, permissions, status, viewsets
+from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
@@ -115,6 +119,63 @@ class UserViewSet(viewsets.ModelViewSet):
             qs = qs.filter(manager_id=manager)
 
         return qs
+
+    @action(detail=False, methods=["post"])
+    def import_csv(self, request):
+        if request.user.role != "rh":
+            return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
+
+        file = request.FILES.get("file")
+        if not file:
+            return Response({"error": "Fichier CSV requis"}, status=status.HTTP_400_BAD_REQUEST)
+
+        decoded = file.read().decode("utf-8-sig")
+        reader = csv.DictReader(io.StringIO(decoded))
+
+        created = 0
+        errors = []
+
+        for row_num, row in enumerate(reader, start=2):
+            email = row.get("email", "").strip().lower()
+            if not email:
+                errors.append(f"Ligne {row_num}: email manquant")
+                continue
+
+            site_name = row.get("site", "").strip()
+            site = None
+            if site_name:
+                site, _ = Site.objects.get_or_create(name=site_name)
+
+            manager_email = row.get("manager_email", "").strip().lower()
+            manager = None
+            if manager_email:
+                manager = User.objects.filter(email=manager_email).first()
+
+            role = row.get("role", "employee").strip().lower()
+            if role not in ("rh", "manager", "employee"):
+                role = "employee"
+
+            try:
+                user, created_flag = User.objects.get_or_create(
+                    email=email,
+                    defaults={
+                        "username": email,
+                        "first_name": row.get("first_name", "").strip(),
+                        "last_name": row.get("last_name", "").strip(),
+                        "role": role,
+                        "department": row.get("department", "").strip(),
+                        "site": site,
+                        "manager": manager,
+                    },
+                )
+                if created_flag:
+                    user.set_unusable_password()
+                    user.save()
+                    created += 1
+            except Exception as e:
+                errors.append(f"Ligne {row_num} ({email}): {e}")
+
+        return Response({"created": created, "errors": errors, "total": len(reader)})
 
     def destroy(self, request, *args, **kwargs):
         return Response(

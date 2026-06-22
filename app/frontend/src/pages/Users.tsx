@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Plus, Search } from "lucide-react";
+import { ArrowLeft, Plus, Search, Upload } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
@@ -30,6 +30,7 @@ export default function Users() {
   const [managerId, setManagerId] = useState<string>("");
   const [siteId, setSiteId] = useState<string>("");
   const [search, setSearch] = useState("");
+  const [importing, setImporting] = useState(false);
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["me"],
@@ -63,6 +64,22 @@ export default function Users() {
     queryFn: () => api.get("/sites/").then((r) => r.data),
   });
 
+  const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImporting(true);
+    const form = new FormData();
+    form.append("file", file);
+    try {
+      await api.post("/users/import_csv/", form);
+      refetch();
+    } catch (err) {
+      console.error(err);
+    }
+    setImporting(false);
+    e.target.value = "";
+  };
+
   if (isLoading) return <LoadingScreen />;
   if (error) return <ErrorScreen message="Impossible de charger les utilisateurs" onRetry={refetch} />;
 
@@ -71,10 +88,17 @@ export default function Users() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Utilisateurs</h1>
         {currentUser?.role === "rh" && (
-          <Button onClick={() => navigate("/users/new")} className="gap-2">
-            <Plus className="h-4 w-4" />
-            Nouvel utilisateur
-          </Button>
+          <div className="flex gap-2">
+            <label className="btn btn-outline inline-flex cursor-pointer items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-secondary">
+              <Upload className="h-4 w-4" />
+              {importing ? "Import..." : "Importer CSV"}
+              <input type="file" accept=".csv" onChange={handleImport} hidden />
+            </label>
+            <Button onClick={() => navigate("/users/new")} className="gap-2">
+              <Plus className="h-4 w-4" />
+              Nouvel utilisateur
+            </Button>
+          </div>
         )}
       </div>
 
