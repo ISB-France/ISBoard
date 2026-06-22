@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -13,7 +14,9 @@ import type { Campaign, User } from "../types";
 
 export default function Campaigns() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [showHistory, setShowHistory] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["me"],
@@ -95,11 +98,18 @@ export default function Campaigns() {
                     <Badge variant="secondary">{c.interview_count}</Badge>
                   </td>
                   <td className="px-6 py-3">
-                    {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
-                      <Button variant="ghost" size="sm" onClick={() => navigate(`/campaigns/${c.id}/edit`)}>
-                        Modifier
-                      </Button>
-                    )}
+                    <div className="flex items-center gap-1">
+                      {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
+                        <>
+                          <Button variant="ghost" size="sm" onClick={() => navigate(`/campaigns/${c.id}/edit`)}>
+                            Modifier
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={() => setDeleteId(c.id)}>
+                            <Trash2 className="h-4 w-4 text-red-500" />
+                          </Button>
+                        </>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -107,6 +117,16 @@ export default function Campaigns() {
           </table>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="Supprimer la campagne"
+        message="Êtes-vous sûr de vouloir supprimer cette campagne ? Les entretiens liés seront également supprimés."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={async () => { if (deleteId) { await api.delete(`/campaigns/${deleteId}/`); queryClient.invalidateQueries({ queryKey: ["campaigns"] }); } setDeleteId(null); }}
+        onCancel={() => setDeleteId(null)}
+      />
     </AppLayout>
   );
 }

@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import Position, Service, User
+from .models import Notification, Position, Service, User
 
 
 @admin.register(Service)
@@ -13,6 +13,13 @@ class ServiceAdmin(admin.ModelAdmin):
 class PositionAdmin(admin.ModelAdmin):
     list_display = ["name"]
     search_fields = ["name"]
+
+
+@admin.register(Notification)
+class NotificationAdmin(admin.ModelAdmin):
+    list_display = ["user", "message", "is_read", "created_at"]
+    list_filter = ["is_read", "created_at"]
+    search_fields = ["user__email", "message"]
 
 
 @admin.register(User)

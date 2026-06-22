@@ -1,3 +1,4 @@
+from django.db import models
 from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -27,13 +28,15 @@ class InterviewPermission(permissions.BasePermission):
         if request.user.role in RH_ROLES:
             return True
         if view.action in ("retrieve",):
-            return obj.employee == request.user or obj.manager == request.user
-        if view.action in ("update", "partial_update"):
-            if obj.manager == request.user:
+            if obj.employee == request.user or obj.manager == request.user:
                 return True
-            if obj.employee == request.user and not obj.employee.manager:
+            from apps.users.views import get_subordinate_ids
+            ids = get_subordinate_ids(request.user.id)
+            if obj.employee_id in ids:
                 return True
             return False
+        if view.action in ("update", "partial_update"):
+            return request.user.role in RH_ROLES
         return False
 
 
@@ -48,10 +51,28 @@ class InterviewViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         user = self.request.user
         qs = Interview.objects.select_related("employee", "manager", "template", "campaign")
+        scope = self.request.query_params.get("scope")
+
         if user.role in RH_ROLES:
             qs = qs.all()
+
         elif user.role == "manager":
-            qs = qs.filter(manager=user)
+            if scope == "own":
+                qs = qs.filter(models.Q(manager=user) | models.Q(employee=user))
+            elif scope == "team":
+                from apps.users.views import get_subordinate_ids
+                ids = get_subordinate_ids(user.id)
+                if ids:
+                    qs = qs.filter(employee_id__in=ids)
+                else:
+                    qs = qs.none()
+            else:
+                subordinates = User.objects.filter(manager=user).values_list("id", flat=True)
+                if subordinates:
+                    qs = qs.filter(employee_id__in=subordinates)
+                else:
+                    qs = qs.filter(manager=user)
+
         elif user.role == "employee" and not user.manager:
             qs = qs.filter(employee=user)
         else:
@@ -64,21 +85,6 @@ class InterviewViewSet(viewsets.ModelViewSet):
         if status_filter:
             status_list = status_filter.split(",")
             qs = qs.filter(status__in=status_list)
-
-        scope = self.request.query_params.get("scope")
-        if scope == "own" and user.role not in RH_ROLES:
-            qs = qs.filter(manager=user)
-        elif scope == "direct" and user.role not in RH_ROLES:
-            subordinates = User.objects.filter(manager=user).values_list("id", flat=True)
-            qs = qs.filter(employee_id__in=subordinates)
-        elif scope == "team" and user.role not in RH_ROLES:
-            from apps.users.views import get_subordinate_ids
-            ids = get_subordinate_ids(user.id)
-            if ids:
-                ids.add(user.id)
-                qs = qs.filter(employee_id__in=ids)
-            else:
-                qs = qs.none()
 
         return qs
 

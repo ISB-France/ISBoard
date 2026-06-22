@@ -125,3 +125,17 @@ class User(AbstractUser):
 
 
 RH_ROLES = ["admin", "rh"]
+
+
+class Notification(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notifications")
+    message = models.CharField(max_length=255)
+    link = models.CharField(max_length=255, blank=True)
+    is_read = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        return f"[{'Lu' if self.is_read else 'Non lu'}] {self.message}"

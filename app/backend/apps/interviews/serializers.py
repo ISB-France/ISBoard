@@ -31,6 +31,8 @@ class InterviewSerializer(serializers.ModelSerializer):
     employee_detail = UserSerializer(source="employee", read_only=True)
     manager_detail = UserSerializer(source="manager", read_only=True)
     template_name = serializers.CharField(source="template.name", read_only=True, default="")
+    employee_manager_name = serializers.SerializerMethodField()
+    employee_manager_id = serializers.SerializerMethodField()
 
     class Meta:
         model = Interview
@@ -38,7 +40,18 @@ class InterviewSerializer(serializers.ModelSerializer):
             "id", "employee", "employee_detail",
             "manager", "manager_detail",
             "campaign", "template", "template_name",
+            "employee_manager_name", "employee_manager_id",
             "type", "status", "due_date", "content",
             "created_at", "updated_at",
         ]
         read_only_fields = ["manager", "created_at", "updated_at"]
+
+    def get_employee_manager_name(self, obj):
+        if obj.employee.manager:
+            return obj.employee.manager.get_full_name() or obj.employee.manager.email
+        return None
+
+    def get_employee_manager_id(self, obj):
+        if obj.employee.manager:
+            return obj.employee.manager.id
+        return None

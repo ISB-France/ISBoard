@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Play, Trash2 } from "lucide-react";
+import ConfirmDialog from "../components/ConfirmDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -24,6 +25,7 @@ export default function CampaignDetail() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [generating, setGenerating] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: campaign, isLoading, error } = useQuery<Campaign>({
     queryKey: ["campaign", id],
@@ -71,6 +73,10 @@ export default function CampaignDetail() {
           <Button onClick={handleGenerate} disabled={generating} className="gap-2">
             <Play className="h-4 w-4" />
             {generating ? "Génération..." : "Générer les entretiens"}
+          </Button>
+          <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)}>
+            <Trash2 className="mr-1 h-4 w-4" />
+            Supprimer
           </Button>
         </div>
       </div>
@@ -125,6 +131,16 @@ export default function CampaignDetail() {
           </table>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={showDeleteConfirm}
+        title="Supprimer la campagne"
+        message="Êtes-vous sûr de vouloir supprimer cette campagne ? Les entretiens liés seront également supprimés."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={async () => { setShowDeleteConfirm(false); await api.delete(`/campaigns/${id}/`); navigate("/campaigns"); }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </AppLayout>
   );
 }

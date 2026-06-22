@@ -96,12 +96,22 @@ export interface Interview {
   campaign: number | null;
   template: number | null;
   template_name: string;
+  employee_manager_id: number | null;
+  employee_manager_name: string | null;
   type: "annual" | "professional" | "bilan" | "forfait" | "fin_carriere";
   status: "draft" | "in_progress" | "completed" | "signed" | "cancelled";
   due_date: string;
   content: Record<string, unknown>;
   created_at: string;
   updated_at: string;
+}
+
+export interface Notification {
+  id: number;
+  message: string;
+  link: string;
+  is_read: boolean;
+  created_at: string;
 }
 
 export interface InterviewStats {

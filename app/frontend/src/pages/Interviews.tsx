@@ -1,13 +1,14 @@
 import { useState, useCallback } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Download } from "lucide-react";
+import { Plus, Download, Trash2 } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import ErrorScreen from "../components/ErrorScreen";
+import ConfirmDialog from "../components/ConfirmDialog";
 import api from "../api";
 import type { Interview, User } from "../types";
 
@@ -31,9 +32,11 @@ const statusLabel: Record<string, string> = {
 
 export default function Interviews() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [type, setType] = useState("");
   const [scope, setScope] = useState("");
   const [showHistory, setShowHistory] = useState(false);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["me"],
@@ -57,7 +60,7 @@ export default function Interviews() {
     <AppLayout>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Entretiens</h1>
-        {(currentUser?.role === "admin" || currentUser?.role === "rh" || currentUser?.role === "manager") && (
+        {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
           <Button onClick={() => navigate("/interviews/new")} className="gap-2">
             <Plus className="h-4 w-4" />
             Nouvel entretien
@@ -66,15 +69,15 @@ export default function Interviews() {
       </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        {currentUser?.role === "manager" && (
+        {currentUser?.role && !["employee", "stagiaire", "alternant"].includes(currentUser.role) && (
           <select
             value={scope}
             onChange={(e) => setScope(e.target.value)}
             className="h-10 rounded-md border border-border bg-white px-3 text-sm"
           >
-            <option value="">Mes entretiens</option>
-            <option value="direct">N-1</option>
-            <option value="team">N-N</option>
+            <option value="">N-1 (Équipe directe)</option>
+            <option value="own">Mes entretiens</option>
+            <option value="team">Toute l'équipe</option>
           </select>
         )}
         <select
@@ -130,8 +133,7 @@ export default function Interviews() {
               {interviews?.map((iv) => (
                 <tr
                   key={iv.id}
-                  className="cursor-pointer border-b border-border last:border-0 hover:bg-muted/50 transition-colors"
-                  onClick={() => navigate(`/interviews/${iv.id}`)}
+                  className="border-b border-border last:border-0 transition-colors"
                 >
                   <td className="px-6 py-3 text-sm font-medium">
                     {iv.employee_detail?.first_name} {iv.employee_detail?.last_name}
@@ -148,36 +150,41 @@ export default function Interviews() {
                     </Badge>
                   </td>
                   <td className="px-6 py-3 text-sm">{iv.due_date}</td>
-                  <td className="px-6 py-3 text-sm text-muted-foreground">
-                    {iv.manager_detail?.first_name} {iv.manager_detail?.last_name}
+                  <td className="px-6 py-3">
+                    <div className="text-sm text-muted-foreground">
+                      {iv.manager_detail?.first_name} {iv.manager_detail?.last_name}
+                    </div>
+                    {iv.employee_manager_name && (
+                      <div className="text-xs text-muted-foreground/60">
+                        N+1 : {iv.employee_manager_name}
+                      </div>
+                    )}
                   </td>
                   <td className="px-6 py-3">
-                    {showHistory ? (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          downloadPdf(iv.id);
-                        }}
-                      >
-                        <Download className="mr-1 h-4 w-4" />
-                        PDF
-                      </Button>
-                    ) : (
-                      (currentUser?.role === "admin" || currentUser?.role === "rh" || currentUser?.role === "manager") && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/interviews/${iv.id}/edit`);
-                          }}
-                        >
-                          Modifier
+                    <div className="flex items-center gap-1">
+                      {showHistory ? (
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); downloadPdf(iv.id); }}>
+                          <Download className="mr-1 h-4 w-4" />
+                          PDF
                         </Button>
-                      )
+                    ) : (
+                      <>
+                        <Button variant="ghost" size="sm" onClick={() => navigate(`/interviews/${iv.id}`)}>
+                          Voir
+                        </Button>
+                        {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/interviews/${iv.id}/edit`); }}>
+                            Modifier
+                          </Button>
+                        )}
+                      </>
                     )}
+                      {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setDeleteId(iv.id); }}>
+                          <Trash2 className="h-4 w-4 text-red-500" />
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -185,6 +192,16 @@ export default function Interviews() {
           </table>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="Supprimer l'entretien"
+        message="Êtes-vous sûr de vouloir supprimer cet entretien ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={async () => { if (deleteId) { await api.delete(`/interviews/${deleteId}/`); queryClient.invalidateQueries({ queryKey: ["interviews"] }); } setDeleteId(null); }}
+        onCancel={() => setDeleteId(null)}
+      />
     </AppLayout>
   );
 }

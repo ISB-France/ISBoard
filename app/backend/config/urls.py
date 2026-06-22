@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView, TokenVerifyView
-from apps.users.views import OIDCAuthenticationRequestView, OIDCCallbackView, MeView, UserViewSet, SiteViewSet, ServiceViewSet, PositionViewSet, DevLoginView, LogoutView
+from apps.users.views import OIDCAuthenticationRequestView, OIDCCallbackView, MeView, UserViewSet, SiteViewSet, ServiceViewSet, PositionViewSet, NotificationViewSet, DevLoginView, LogoutView
 from apps.interviews.views import CampaignViewSet, InterviewTemplateViewSet, InterviewViewSet
 
 router = DefaultRouter()
@@ -27,6 +27,9 @@ urlpatterns = [
     path("api/positions/<int:pk>/", PositionViewSet.as_view({"get": "retrieve", "put": "update", "patch": "partial_update", "delete": "destroy"}), name="position-detail"),
     path("api/interview-templates/", InterviewTemplateViewSet.as_view({"get": "list", "post": "create"}), name="interviewtemplate-list"),
     path("api/interview-templates/<int:pk>/", InterviewTemplateViewSet.as_view({"get": "retrieve", "put": "update", "patch": "partial_update", "delete": "destroy"}), name="interviewtemplate-detail"),
+    path("api/notifications/", NotificationViewSet.as_view({"get": "list"}), name="notification-list"),
+    path("api/notifications/<int:pk>/mark-read/", NotificationViewSet.as_view({"post": "mark_read"}), name="notification-mark-read"),
+    path("api/notifications/mark-all-read/", NotificationViewSet.as_view({"post": "mark_all_read"}), name="notification-mark-all-read"),
     path("api/campaigns/", CampaignViewSet.as_view({"get": "list", "post": "create"}), name="campaign-list"),
     path("api/campaigns/<int:pk>/", CampaignViewSet.as_view({"get": "retrieve", "put": "update", "patch": "partial_update", "delete": "destroy"}), name="campaign-detail"),
     path("api/campaigns/<int:pk>/generate/", CampaignViewSet.as_view({"post": "generate"}), name="campaign-generate"),

@@ -15,8 +15,9 @@ from mozilla_django_oidc.views import OIDCAuthenticationCallbackView as BaseCall
 
 from django.db import models as db_models
 
-from .models import RH_ROLES, Position, Service, Site, User
+from .models import RH_ROLES, Notification, Position, Service, Site, User
 from .serializers import (
+    NotificationSerializer,
     PositionSerializer,
     ServiceSerializer,
     SiteSerializer,
@@ -284,6 +285,26 @@ class PositionViewSet(viewsets.ModelViewSet):
             from rest_framework.exceptions import PermissionDenied
             raise PermissionDenied("Seuls les RH/Admin peuvent supprimer un poste")
         instance.delete()
+
+
+class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = NotificationSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return Notification.objects.filter(user=self.request.user)
+
+    @action(detail=True, methods=["post"])
+    def mark_read(self, request, pk=None):
+        notif = self.get_object()
+        notif.is_read = True
+        notif.save(update_fields=["is_read"])
+        return Response({"status": "ok"})
+
+    @action(detail=False, methods=["post"])
+    def mark_all_read(self, request):
+        self.get_queryset().filter(is_read=False).update(is_read=True)
+        return Response({"status": "ok"})
 
 
 class DevLoginView(APIView):
