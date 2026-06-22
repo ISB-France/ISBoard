@@ -83,8 +83,11 @@ class DevLoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        admin_email = os.environ.get("DEV_ADMIN_EMAIL", "admin@admin.fr")
-        admin_password = os.environ.get("DEV_ADMIN_PASSWORD", "admin1234")
+        admin_email = os.environ.get("DEV_ADMIN_EMAIL")
+        admin_password = os.environ.get("DEV_ADMIN_PASSWORD")
+
+        if not admin_email or not admin_password:
+            return Response({"error": "Login dev non configuré"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         email = request.data.get("email", "").strip().lower()
         password = request.data.get("password", "")
