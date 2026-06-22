@@ -1,4 +1,3 @@
-import os
 from urllib.parse import urlencode
 
 from django.conf import settings
@@ -83,27 +82,14 @@ class DevLoginView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def post(self, request):
-        admin_email = os.environ.get("DEV_ADMIN_EMAIL")
-        admin_password = os.environ.get("DEV_ADMIN_PASSWORD")
-
-        if not admin_email or not admin_password:
-            return Response({"error": "Login dev non configuré"}, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        from django.contrib.auth import authenticate
 
         email = request.data.get("email", "").strip().lower()
         password = request.data.get("password", "")
 
-        if email != admin_email or password != admin_password:
+        user = authenticate(request, username=email, password=password)
+        if not user:
             return Response({"error": "Identifiants invalides"}, status=status.HTTP_401_UNAUTHORIZED)
-
-        user, created = User.objects.get_or_create(
-            email=email,
-            defaults={
-                "username": email,
-                "role": "rh",
-            },
-        )
-        user.set_password(password)
-        user.save()
 
         refresh = RefreshToken.for_user(user)
         return Response({
