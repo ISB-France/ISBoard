@@ -77,9 +77,11 @@ class UserViewSet(viewsets.ModelViewSet):
             return User.objects.all().select_related("manager")
         return User.objects.filter(id=self.request.user.id)
 
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save()
+    def destroy(self, request, *args, **kwargs):
+        return Response(
+            {"error": "La suppression d'un utilisateur n'est pas autorisée"},
+            status=status.HTTP_403_FORBIDDEN,
+        )
 
 
 class DevLoginView(APIView):
