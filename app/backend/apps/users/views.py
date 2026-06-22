@@ -68,14 +68,18 @@ class MeView(generics.RetrieveAPIView):
         return self.request.user
 
 
-class UserViewSet(viewsets.ReadOnlyModelViewSet):
+class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         if self.request.user.role == "rh":
-            return User.objects.filter(is_active=True).select_related("manager")
+            return User.objects.all().select_related("manager")
         return User.objects.filter(id=self.request.user.id)
+
+    def perform_destroy(self, instance):
+        instance.is_active = False
+        instance.save()
 
 
 class DevLoginView(APIView):
