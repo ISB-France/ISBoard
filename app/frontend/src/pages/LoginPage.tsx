@@ -9,6 +9,7 @@ import api from "../api";
 export default function LoginPage() {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -21,12 +22,17 @@ export default function LoginPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await api.post("/auth/dev-login/", { email });
+      const res = await api.post("/auth/dev-login/", { email, password });
       localStorage.setItem("access_token", res.data.access);
       localStorage.setItem("refresh_token", res.data.refresh);
       navigate("/", { replace: true });
-    } catch {
-      setError("Erreur de connexion");
+    } catch (err: unknown) {
+      if (err && typeof err === "object" && "response" in err) {
+        const axiosErr = err as { response?: { data?: { error?: string } } };
+        setError(axiosErr.response?.data?.error || "Identifiants invalides");
+      } else {
+        setError("Erreur de connexion");
+      }
     } finally {
       setLoading(false);
     }
@@ -63,6 +69,13 @@ export default function LoginPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
+          />
+          <Input
+            type="password"
+            placeholder="Mot de passe"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             required
           />
           {error && <p className="text-xs text-destructive">{error}</p>}

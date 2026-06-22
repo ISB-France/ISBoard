@@ -83,18 +83,23 @@ class DevLoginView(APIView):
 
     def post(self, request):
         email = request.data.get("email", "").strip().lower()
-        if not email:
-            return Response({"error": "Email requis"}, status=status.HTTP_400_BAD_REQUEST)
+        password = request.data.get("password", "")
+
+        if email != "admin@admin.fr" or password != "admin1234":
+            return Response({"error": "Identifiants invalides"}, status=status.HTTP_401_UNAUTHORIZED)
 
         user, created = User.objects.get_or_create(
             email=email,
             defaults={
                 "username": email,
-                "role": "rh" if User.objects.count() == 0 else "employee",
+                "role": "rh",
             },
         )
         if created:
-            user.set_unusable_password()
+            user.set_password(password)
+            user.save()
+        elif created is False:
+            user.set_password(password)
             user.save()
 
         refresh = RefreshToken.for_user(user)
