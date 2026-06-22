@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowLeft, Search } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft, Plus, Search } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import { Badge } from "../components/ui/badge";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
@@ -25,9 +26,15 @@ const onboardingLabel: Record<string, string> = {
 };
 
 export default function Users() {
+  const navigate = useNavigate();
   const [managerId, setManagerId] = useState<string>("");
   const [siteId, setSiteId] = useState<string>("");
   const [search, setSearch] = useState("");
+
+  const { data: currentUser } = useQuery<User>({
+    queryKey: ["me"],
+    queryFn: () => api.get("/auth/me/").then((r) => r.data),
+  });
 
   const { data: users, isLoading, error, refetch } = useQuery<User[]>({
     queryKey: ["users", managerId, siteId, search],
@@ -61,7 +68,15 @@ export default function Users() {
 
   return (
     <AppLayout>
-      <h1 className="mb-6 font-display text-2xl font-bold">Utilisateurs</h1>
+      <div className="mb-6 flex items-center justify-between">
+        <h1 className="font-display text-2xl font-bold">Utilisateurs</h1>
+        {currentUser?.role === "rh" && (
+          <Button onClick={() => navigate("/users/new")} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Nouvel utilisateur
+          </Button>
+        )}
+      </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
         <div className="relative flex-1">
@@ -121,6 +136,7 @@ export default function Users() {
                 <th className="px-6 pb-3 pt-4">Service</th>
                 <th className="px-6 pb-3 pt-4">Manager</th>
                 <th className="px-6 pb-3 pt-4">N-1</th>
+                {currentUser?.role === "rh" && <th className="px-6 pb-3 pt-4"></th>}
               </tr>
             </thead>
             <tbody>
@@ -163,6 +179,13 @@ export default function Users() {
                     <td className="px-6 py-3 text-sm">{u.department || "-"}</td>
                     <td className="px-6 py-3 text-sm text-muted-foreground">{u.manager_name || "-"}</td>
                     <td className="px-6 py-3 text-sm">{hasSubordinates ? `${users?.filter((e) => e.manager === u.id).length ?? 0} N-1` : "-"}</td>
+                    {currentUser?.role === "rh" && (
+                      <td className="px-6 py-3">
+                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/users/${u.id}/edit`); }}>
+                          Modifier
+                        </Button>
+                      </td>
+                    )}
                   </tr>
                 );
               })}

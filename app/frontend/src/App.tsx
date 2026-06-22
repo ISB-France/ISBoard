@@ -6,6 +6,7 @@ import Interviews from "./pages/Interviews";
 import InterviewDetail from "./pages/InterviewDetail";
 import InterviewForm from "./pages/InterviewForm";
 import Users from "./pages/Users";
+import UserForm from "./pages/UserForm";
 
 function App() {
   const token = localStorage.getItem("access_token");
@@ -28,6 +29,8 @@ function App() {
       <Route path="/interviews/:id" element={<InterviewDetail />} />
       <Route path="/interviews/:id/edit" element={<InterviewForm />} />
       <Route path="/users" element={<Users />} />
+      <Route path="/users/new" element={<UserForm />} />
+      <Route path="/users/:id/edit" element={<UserForm />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );
