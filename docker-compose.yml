@@ -32,5 +32,13 @@ services:
       - ./app/frontend:/app
       - /app/node_modules
 
+  adminer:
+    image: adminer:latest
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+
 volumes:
   pgdata:

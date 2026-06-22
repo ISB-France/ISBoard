@@ -17,7 +17,7 @@ def create_admin_user(sender, **kwargs):
             username=email,
             email=email,
             password=password,
-            role="rh",
+            role="admin",
         )
 
 

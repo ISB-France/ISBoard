@@ -1,6 +1,6 @@
 import { NavLink, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { LayoutDashboard, Users, FileText, LogOut, Menu, X } from "lucide-react";
+import { LayoutDashboard, Users, FileText, LogOut, Menu, X, FileEdit, Flag } from "lucide-react";
 import { useState } from "react";
 import { cn } from "../lib/utils";
 import { Button } from "./ui/button";
@@ -12,6 +12,8 @@ import type { User } from "../types";
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Tableau de bord" },
   { to: "/interviews", icon: FileText, label: "Entretiens" },
+  { to: "/campaigns", icon: Flag, label: "Campagnes", role: "rh" },
+  { to: "/templates", icon: FileEdit, label: "Modèles", role: "rh" },
   { to: "/users", icon: Users, label: "Utilisateurs", role: "rh" },
 ];
 
@@ -42,8 +44,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-[#FDFAF5]">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-isb-brown text-white transition-transform lg:static lg:translate-x-0",
-          sidebarOpen ? "translate-x-0" : "-translate-x-full",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-isb-brown text-white transition-transform",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
         <div className="flex items-center gap-3 px-6 py-6">
@@ -52,7 +54,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {navItems
-            .filter((item) => !item.role || user?.role === item.role)
+            .filter((item) => !item.role || user?.role === item.role || (item.role === "rh" && user?.role === "admin"))
             .map((item) => (
               <NavLink
                 key={item.to}
@@ -90,7 +92,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="fixed inset-0 z-40 bg-black/50 lg:hidden" onClick={() => setSidebarOpen(false)} />
       )}
 
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col lg:ml-64">
         <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-[#FDFAF5] px-6">
           <button className="lg:hidden" onClick={() => setSidebarOpen(!sidebarOpen)}>
             {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}

@@ -5,6 +5,11 @@ import Dashboard from "./pages/Dashboard";
 import Interviews from "./pages/Interviews";
 import InterviewDetail from "./pages/InterviewDetail";
 import InterviewForm from "./pages/InterviewForm";
+import Campaigns from "./pages/Campaigns";
+import CampaignForm from "./pages/CampaignForm";
+import CampaignDetail from "./pages/CampaignDetail";
+import Templates from "./pages/Templates";
+import TemplateForm from "./pages/TemplateForm";
 import Users from "./pages/Users";
 import UserForm from "./pages/UserForm";
 
@@ -28,6 +33,13 @@ function App() {
       <Route path="/interviews/new" element={<InterviewForm />} />
       <Route path="/interviews/:id" element={<InterviewDetail />} />
       <Route path="/interviews/:id/edit" element={<InterviewForm />} />
+      <Route path="/campaigns" element={<Campaigns />} />
+      <Route path="/campaigns/new" element={<CampaignForm />} />
+      <Route path="/campaigns/:id" element={<CampaignDetail />} />
+      <Route path="/campaigns/:id/edit" element={<CampaignForm />} />
+      <Route path="/templates" element={<Templates />} />
+      <Route path="/templates/new" element={<TemplateForm />} />
+      <Route path="/templates/:id/edit" element={<TemplateForm />} />
       <Route path="/users" element={<Users />} />
       <Route path="/users/new" element={<UserForm />} />
       <Route path="/users/:id/edit" element={<UserForm />} />

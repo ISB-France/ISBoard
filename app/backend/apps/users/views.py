@@ -15,8 +15,14 @@ from mozilla_django_oidc.views import OIDCAuthenticationCallbackView as BaseCall
 
 from django.db import models as db_models
 
-from .models import Site, User
-from .serializers import SiteSerializer, UserMeSerializer, UserSerializer
+from .models import RH_ROLES, Position, Service, Site, User
+from .serializers import (
+    PositionSerializer,
+    ServiceSerializer,
+    SiteSerializer,
+    UserMeSerializer,
+    UserSerializer,
+)
 
 
 def get_subordinate_ids(user_id):
@@ -93,7 +99,7 @@ class UserViewSet(viewsets.ModelViewSet):
         user = self.request.user
         qs = User.objects.select_related("manager", "site")
 
-        if user.role == "rh":
+        if user.role in RH_ROLES:
             qs = qs.all()
         else:
             ids = get_subordinate_ids(user.id)
@@ -122,7 +128,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=["post"])
     def import_csv(self, request):
-        if request.user.role != "rh":
+        if request.user.role not in RH_ROLES:
             return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
 
         file = request.FILES.get("file")
@@ -146,13 +152,23 @@ class UserViewSet(viewsets.ModelViewSet):
             if site_name:
                 site, _ = Site.objects.get_or_create(name=site_name)
 
+            service_name = row.get("service", "").strip()
+            service = None
+            if service_name:
+                service, _ = Service.objects.get_or_create(name=service_name)
+
+            position_name = row.get("position", "").strip()
+            position = None
+            if position_name:
+                position, _ = Position.objects.get_or_create(name=position_name)
+
             manager_email = row.get("manager_email", "").strip().lower()
             manager = None
             if manager_email:
                 manager = User.objects.filter(email=manager_email).first()
 
             role = row.get("role", "employee").strip().lower()
-            if role not in ("rh", "manager", "employee"):
+            if role not in ("admin", "rh", "manager", "employee", "stagiaire", "alternant"):
                 role = "employee"
 
             try:
@@ -163,9 +179,21 @@ class UserViewSet(viewsets.ModelViewSet):
                         "first_name": row.get("first_name", "").strip(),
                         "last_name": row.get("last_name", "").strip(),
                         "role": role,
-                        "department": row.get("department", "").strip(),
+                        "service": service,
+                        "position": position,
                         "site": site,
                         "manager": manager,
+                        "matricule": row.get("matricule", "").strip(),
+                        "type_contrat": row.get("type_contrat", "").strip(),
+                        "statut": row.get("statut", "actif").strip(),
+                        "sexe": row.get("sexe", "").strip(),
+                        "telephone": row.get("telephone", "").strip(),
+                        "coefficient": row.get("coefficient", "").strip(),
+                        "salaire_brut": row.get("salaire_brut", "").strip() or None,
+                        "forfait_jour": row.get("forfait_jour", "false").strip().lower() == "true",
+                        "tickets_restaurant": row.get("tickets_restaurant", "false").strip().lower() == "true",
+                        "cadre": row.get("cadre", "false").strip().lower() == "true",
+                        "agence_interim": row.get("agence_interim", "").strip(),
                     },
                 )
                 if created_flag:
@@ -176,6 +204,16 @@ class UserViewSet(viewsets.ModelViewSet):
                 errors.append(f"Ligne {row_num} ({email}): {e}")
 
         return Response({"created": created, "errors": errors, "total": len(reader)})
+
+    @action(detail=False, methods=["get"])
+    def next_matricule(self, request):
+        import re
+        existing = User.objects.exclude(matricule="").values_list("matricule", flat=True)
+        used = {m for m in existing if re.match(r"^\d+$", m)}
+        next_num = 1
+        if used:
+            next_num = max(int(m) for m in used) + 1
+        return Response({"matricule": f"{next_num:08d}"})
 
     def destroy(self, request, *args, **kwargs):
         return Response(
@@ -188,6 +226,64 @@ class SiteViewSet(viewsets.ReadOnlyModelViewSet):
     queryset = Site.objects.all()
     serializer_class = SiteSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class ServiceViewSet(viewsets.ModelViewSet):
+    queryset = Service.objects.all()
+    serializer_class = ServiceSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ("create", "update", "partial_update", "destroy"):
+            return [permissions.IsAuthenticated()]
+        return super().get_permissions()
+
+    def perform_create(self, serializer):
+        if self.request.user.role not in RH_ROLES:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Seuls les RH/Admin peuvent créer un service")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if self.request.user.role not in RH_ROLES:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Seuls les RH/Admin peuvent modifier un service")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if self.request.user.role not in RH_ROLES:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Seuls les RH/Admin peuvent supprimer un service")
+        instance.delete()
+
+
+class PositionViewSet(viewsets.ModelViewSet):
+    queryset = Position.objects.all()
+    serializer_class = PositionSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_permissions(self):
+        if self.action in ("create", "update", "partial_update", "destroy"):
+            return [permissions.IsAuthenticated()]
+        return super().get_permissions()
+
+    def perform_create(self, serializer):
+        if self.request.user.role not in RH_ROLES:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Seuls les RH/Admin peuvent créer un poste")
+        serializer.save()
+
+    def perform_update(self, serializer):
+        if self.request.user.role not in RH_ROLES:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Seuls les RH/Admin peuvent modifier un poste")
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        if self.request.user.role not in RH_ROLES:
+            from rest_framework.exceptions import PermissionDenied
+            raise PermissionDenied("Seuls les RH/Admin peuvent supprimer un poste")
+        instance.delete()
 
 
 class DevLoginView(APIView):

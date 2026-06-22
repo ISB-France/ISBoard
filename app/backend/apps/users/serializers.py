@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Site, User
+from .models import Position, Service, Site, User
 
 
 class SiteSerializer(serializers.ModelSerializer):
@@ -8,29 +8,58 @@ class SiteSerializer(serializers.ModelSerializer):
         fields = ["id", "name"]
 
 
+class ServiceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Service
+        fields = ["id", "name"]
+
+
+class PositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Position
+        fields = ["id", "name"]
+
+
 class UserSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(source="site.name", read_only=True, default="")
+    service_name = serializers.CharField(source="service.name", read_only=True, default="")
+    position_name = serializers.CharField(source="position.name", read_only=True, default="")
 
     class Meta:
         model = User
         fields = [
             "id", "email", "first_name", "last_name",
-            "role", "department", "site", "site_name",
-            "hire_date", "manager", "onboarding_status",
+            "role",
+            "sexe", "date_naissance", "telephone", "photo",
+            "matricule", "hire_date", "date_sortie",
+            "type_contrat", "statut", "coefficient",
+            "salaire_brut", "forfait_jour", "tickets_restaurant", "cadre",
+            "service", "service_name",
+            "position", "position_name",
+            "site", "site_name",
+            "manager", "agence_interim",
         ]
 
 
 class UserMeSerializer(serializers.ModelSerializer):
     manager_name = serializers.SerializerMethodField()
     site_name = serializers.CharField(source="site.name", read_only=True, default="")
+    service_name = serializers.CharField(source="service.name", read_only=True, default="")
+    position_name = serializers.CharField(source="position.name", read_only=True, default="")
 
     class Meta:
         model = User
         fields = [
             "id", "email", "first_name", "last_name",
-            "role", "department", "site", "site_name",
-            "hire_date", "manager", "manager_name",
-            "onboarding_status",
+            "role",
+            "sexe", "date_naissance", "telephone", "photo",
+            "matricule", "hire_date", "date_sortie",
+            "type_contrat", "statut", "coefficient",
+            "salaire_brut", "forfait_jour", "tickets_restaurant", "cadre",
+            "service", "service_name",
+            "position", "position_name",
+            "site", "site_name",
+            "manager", "manager_name", "agence_interim",
         ]
 
     def get_manager_name(self, obj):

@@ -14,9 +14,12 @@ import api from "../api";
 import type { User, Site } from "../types";
 
 const roleLabel: Record<string, string> = {
+  admin: "Admin",
   rh: "RH",
   manager: "Manager",
   employee: "Employé",
+  stagiaire: "Stagiaire",
+  alternant: "Alternant",
 };
 
 const onboardingLabel: Record<string, string> = {
@@ -87,9 +90,9 @@ export default function Users() {
     <AppLayout>
       <div className="mb-6 flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold">Utilisateurs</h1>
-        {currentUser?.role === "rh" && (
+        {(currentUser?.role === "rh" || currentUser?.role === "admin") && (
           <div className="flex gap-2">
-            <label className="btn btn-outline inline-flex cursor-pointer items-center gap-2 rounded-md border border-border px-4 py-2 text-sm font-medium hover:bg-secondary">
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary">
               <Upload className="h-4 w-4" />
               {importing ? "Import..." : "Importer CSV"}
               <input type="file" accept=".csv" onChange={handleImport} hidden />
@@ -158,15 +161,16 @@ export default function Users() {
                 <th className="px-6 pb-3 pt-4">Rôle</th>
                 <th className="px-6 pb-3 pt-4">Site</th>
                 <th className="px-6 pb-3 pt-4">Service</th>
+                <th className="px-6 pb-3 pt-4">Poste</th>
                 <th className="px-6 pb-3 pt-4">Manager</th>
                 <th className="px-6 pb-3 pt-4">N-1</th>
-                {currentUser?.role === "rh" && <th className="px-6 pb-3 pt-4"></th>}
+                {(currentUser?.role === "rh" || currentUser?.role === "admin") && <th className="px-6 pb-3 pt-4"></th>}
               </tr>
             </thead>
             <tbody>
               {users?.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="px-6 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={7} className="px-6 py-8 text-center text-sm text-muted-foreground">
                     Aucun utilisateur trouvé
                   </td>
                 </tr>
@@ -195,15 +199,16 @@ export default function Users() {
                       </div>
                     </td>
                     <td className="px-6 py-3">
-                      <Badge variant={u.role === "rh" ? "default" : u.role === "manager" ? "secondary" : "outline"}>
+                      <Badge variant={u.role === "rh" || u.role === "admin" ? "default" : u.role === "manager" ? "secondary" : "outline"}>
                         {roleLabel[u.role]}
                       </Badge>
                     </td>
                     <td className="px-6 py-3 text-sm">{u.site_name || "-"}</td>
-                    <td className="px-6 py-3 text-sm">{u.department || "-"}</td>
+                    <td className="px-6 py-3 text-sm">{u.service_name || "-"}</td>
+                    <td className="px-6 py-3 text-sm">{u.position_name || "-"}</td>
                     <td className="px-6 py-3 text-sm text-muted-foreground">{u.manager_name || "-"}</td>
                     <td className="px-6 py-3 text-sm">{hasSubordinates ? `${users?.filter((e) => e.manager === u.id).length ?? 0} N-1` : "-"}</td>
-                    {currentUser?.role === "rh" && (
+        {((currentUser?.role === "rh" || currentUser?.role === "admin") || currentUser?.role === "admin") && (
                       <td className="px-6 py-3">
                         <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/users/${u.id}/edit`); }}>
                           Modifier

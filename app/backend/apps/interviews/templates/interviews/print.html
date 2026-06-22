@@ -4,29 +4,40 @@
   <meta charset="UTF-8">
   <title>{{ interview.get_type_display }} - {{ interview.employee.get_full_name }}</title>
   <style>
-    @page { margin: 2cm; size: A4; }
+    @page { margin: 1.5cm; size: A4; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Calibri', 'Helvetica', Arial, sans-serif; font-size: 12pt; color: #000; line-height: 1.5; }
-    h1 { font-size: 18pt; text-align: center; margin-bottom: 4pt; }
-    .subtitle { text-align: center; color: #555; margin-bottom: 24pt; }
-    .info-table { width: 100%; margin-bottom: 24pt; }
-    .info-table td { padding: 4pt 8pt; border: 1px solid #ccc; }
-    .info-table td:first-child { font-weight: bold; width: 30%; background: #f5f5f5; }
-    h2 { font-size: 14pt; margin-bottom: 8pt; padding-bottom: 4pt; border-bottom: 2px solid #000; }
-    .section { margin-bottom: 20pt; page-break-inside: avoid; }
-    .question { margin-bottom: 12pt; }
-    .question-label { font-weight: bold; margin-bottom: 4pt; }
-    .question-answer { padding: 8pt; border: 1px solid #ddd; min-height: 24pt; white-space: pre-wrap; }
+    body { font-family: 'Arial MT', Arial, Helvetica, sans-serif; font-size: 11pt; color: #2E2412; line-height: 1.4; }
+    h1 { font-size: 24pt; color: #4E3700; text-align: center; margin-bottom: 4pt; font-family: Arial, sans-serif; }
+    .subtitle { text-align: center; color: #6A5737; margin-bottom: 20pt; font-size: 10pt; font-family: Arial, sans-serif; }
+    h2 { font-size: 14pt; color: #4E3700; margin-bottom: 8pt; padding-bottom: 4pt; border-bottom: 2px solid #4E3700; font-family: Arial, sans-serif; }
+    .section-title { font-size: 18pt; color: #4E3700; font-weight: bold; margin-bottom: 10pt; font-family: Arial, sans-serif; }
+    .info-grid { width: 100%; margin-bottom: 20pt; border-collapse: collapse; }
+    .info-grid td { padding: 3pt 6pt; vertical-align: top; font-size: 11pt; }
+    .info-grid .section-header { font-weight: bold; font-size: 13pt; color: #4E3700; padding-top: 10pt; padding-bottom: 4pt; font-family: Arial, sans-serif; }
+    .info-grid .label { color: #4E3700; font-weight: bold; width: 30%; font-size: 11pt; }
+    .info-grid .value { color: #2E2412; font-size: 11pt; }
+    .section { margin-bottom: 18pt; page-break-inside: avoid; }
+    .question { margin-bottom: 10pt; }
+    .question-label { color: #4E3700; font-weight: bold; margin-bottom: 3pt; font-size: 11pt; }
+    .question-answer { padding: 6pt; border: 1px solid #ccc; min-height: 20pt; white-space: pre-wrap; font-size: 11pt; color: #2E2412; }
     .rating { display: flex; gap: 4pt; }
-    .rating-dot { display: inline-block; width: 20pt; height: 20pt; border: 1px solid #000; text-align: center; line-height: 20pt; font-size: 10pt; }
-    .rating-dot.filled { background: #000; color: #fff; }
-    .signatures { margin-top: 40pt; display: flex; justify-content: space-between; }
-    .signature-box { width: 45%; }
-    .signature-box p { font-weight: bold; margin-bottom: 4pt; }
-    .signature-line { border-top: 1px solid #000; margin-top: 48pt; padding-top: 4pt; font-size: 10pt; }
+    .rating-dot { display: inline-block; width: 16pt; height: 16pt; border: 1px solid #4E3700; text-align: center; line-height: 16pt; font-size: 9pt; color: #2E2412; }
+    .rating-dot.filled { background: #4E3700; color: #fff; }
+    .bilan-section { margin-top: 16pt; }
+    .bilan-title { font-size: 14pt; color: #4E3700; font-weight: bold; font-family: Arial, sans-serif; }
+    .validation-title { font-size: 18pt; color: #4E3700; font-weight: bold; text-align: center; margin-bottom: 16pt; font-family: Arial, sans-serif; }
+    .signatures { margin-top: 30pt; }
+    .signature-row { display: flex; justify-content: space-between; gap: 20pt; margin-bottom: 16pt; }
+    .signature-box { width: 48%; }
+    .signature-role { font-size: 11pt; color: #8A734E; font-weight: bold; margin-bottom: 2pt; }
+    .signature-name { font-size: 13pt; font-weight: bold; color: #2E2412; margin-bottom: 4pt; }
+    .signature-date { font-size: 10pt; color: #796140; margin-bottom: 4pt; }
+    .signature-line { border-top: 1px solid #4E3700; margin-top: 40pt; padding-top: 4pt; }
+    .legal-text { font-size: 10pt; color: #6A5737; margin-top: 16pt; text-align: center; }
+    .highlight-yellow { color: #FFD400; font-weight: bold; }
     @media print { .no-print { display: none; } }
     .no-print { text-align: center; margin-bottom: 16pt; }
-    .no-print button { padding: 8pt 24pt; font-size: 12pt; cursor: pointer; }
+    .no-print button { padding: 8pt 24pt; font-size: 12pt; cursor: pointer; margin: 0 4pt; }
   </style>
 </head>
 <body>
@@ -38,18 +49,31 @@
   <h1>{{ interview.get_type_display }}</h1>
   <p class="subtitle">ISB France</p>
 
-  <table class="info-table">
-    <tr><td>Employé</td><td>{{ interview.employee.get_full_name|default:interview.employee.email }}</td></tr>
-    <tr><td>Manager</td><td>{{ interview.manager.get_full_name|default:interview.manager.email }}</td></tr>
-    <tr><td>Date limite</td><td>{{ interview.due_date|date:"d/m/Y" }}</td></tr>
-    <tr><td>Statut</td><td>{{ interview.get_status_display }}</td></tr>
-    {% if interview.employee.department %}
-    <tr><td>Service</td><td>{{ interview.employee.department }}</td></tr>
-    {% endif %}
-    {% if interview.employee.hire_date %}
-    <tr><td>Date d'embauche</td><td>{{ interview.employee.hire_date|date:"d/m/Y" }}</td></tr>
-    {% endif %}
+  <table class="info-grid">
+    <tr><td class="section-header" colspan="2">Informations générales</td></tr>
+    <tr><td class="label">Date d'entretien :</td><td class="value">{% now "d/m/Y" %}</td></tr>
+    <tr><td class="label">Nature de l'entretien :</td><td class="value">{{ interview.get_type_display }}</td></tr>
+
+    <tr><td class="section-header" colspan="2">Manager</td></tr>
+    <tr><td class="label">Matricule :</td><td class="value">{{ interview.manager.matricule|default:"—" }}</td></tr>
+    <tr><td class="label">Nom :</td><td class="value">{{ interview.manager.last_name|default:"—" }}</td></tr>
+    <tr><td class="label">Prénom :</td><td class="value">{{ interview.manager.first_name|default:"—" }}</td></tr>
+
+    <tr><td class="section-header" colspan="2">Collaborateur</td></tr>
+    <tr><td class="label">Matricule :</td><td class="value">{{ interview.employee.matricule|default:"—" }}</td></tr>
+    <tr><td class="label">Nom :</td><td class="value">{{ interview.employee.last_name|default:"—" }}</td></tr>
+    <tr><td class="label">Prénom :</td><td class="value">{{ interview.employee.first_name|default:"—" }}</td></tr>
+    <tr><td class="label">Sexe :</td><td class="value">{{ interview.employee.get_sexe_display|default:"—" }}</td></tr>
+    <tr><td class="label">Date de naissance :</td><td class="value">{{ interview.employee.date_naissance|date:"d/m/Y"|default:"—" }}</td></tr>
+    <tr><td class="label">Date d'embauche :</td><td class="value">{{ interview.employee.hire_date|date:"d/m/Y"|default:"—" }}</td></tr>
+    <tr><td class="label">Type de contrat :</td><td class="value">{{ interview.employee.get_type_contrat_display|default:"—" }}</td></tr>
+    <tr><td class="label">Statut :</td><td class="value">{{ interview.employee.get_statut_display|default:"—" }}</td></tr>
+    <tr><td class="label">Poste / Fonction :</td><td class="value">{{ interview.employee.position.name|default:"—" }}</td></tr>
+    <tr><td class="label">Coefficient :</td><td class="value">{{ interview.employee.coefficient|default:"—" }}</td></tr>
+    <tr><td class="label">Ancienneté :</td><td class="value">{% if interview.employee.hire_date %}{{ interview.employee.hire_date|timesince }}{% else %}—{% endif %}</td></tr>
   </table>
+
+  <div class="section-title">Questions / Réponses</div>
 
   {% for section in sections %}
   <div class="section">
@@ -71,15 +95,31 @@
   </div>
   {% endfor %}
 
+  <div class="bilan-section">
+    <div class="bilan-title">Bilans</div>
+  </div>
+
+  <div class="validation-title">Validation et signatures</div>
+
   <div class="signatures">
-    <div class="signature-box">
-      <p>L'employé</p>
-      <div class="signature-line">Signature</div>
+    <div class="signature-row">
+      <div class="signature-box">
+        <div class="signature-role">COLLABORATEUR</div>
+        <div class="signature-name">{{ interview.employee.first_name }} {{ interview.employee.last_name }}</div>
+        <div class="signature-date">Date : _________________________</div>
+        <div class="signature-line">Signature</div>
+      </div>
+      <div class="signature-box">
+        <div class="signature-role">MANAGER</div>
+        <div class="signature-name">{{ interview.manager.first_name }} {{ interview.manager.last_name }}</div>
+        <div class="signature-date">Date : _________________________</div>
+        <div class="signature-line">Signature</div>
+      </div>
     </div>
-    <div class="signature-box">
-      <p>Le manager</p>
-      <div class="signature-line">Signature</div>
-    </div>
+  </div>
+
+  <div class="legal-text">
+    Conformément au règlement général sur la protection des données (RGPD), les informations recueillies font l'objet d'un traitement informatique destiné à la gestion des entretiens individuels. Les destinataires des données sont les services habilités. Conformément à la loi « Informatique et Libertés » du 6 janvier 1978 modifiée, vous bénéficiez d'un droit d'accès, de rectification et d'opposition aux informations qui vous concernent, que vous pouvez exercer auprès du service des ressources humaines.
   </div>
 </body>
 </html>

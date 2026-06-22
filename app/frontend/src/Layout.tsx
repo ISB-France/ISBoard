@@ -28,7 +28,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         <nav>
           <NavLink to="/" end>Tableau de bord</NavLink>
           <NavLink to="/interviews">Entretiens</NavLink>
-          {user?.role === "rh" && <NavLink to="/users">Utilisateurs</NavLink>}
+          {(user?.role === "rh" || user?.role === "admin") && <NavLink to="/users">Utilisateurs</NavLink>}
         </nav>
       </aside>
       <div className="main-area">

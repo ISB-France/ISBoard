@@ -1,15 +1,29 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
-from .models import User
+from .models import Position, Service, User
+
+
+@admin.register(Service)
+class ServiceAdmin(admin.ModelAdmin):
+    list_display = ["name"]
+    search_fields = ["name"]
+
+
+@admin.register(Position)
+class PositionAdmin(admin.ModelAdmin):
+    list_display = ["name"]
+    search_fields = ["name"]
 
 
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
-    list_display = ["email", "first_name", "last_name", "role", "department", "onboarding_status"]
-    list_filter = ["role", "department", "onboarding_status"]
+    list_display = ["email", "first_name", "last_name", "role", "matricule", "service", "position", "statut"]
+    list_filter = ["role", "service", "position", "statut", "type_contrat", "site"]
     fieldsets = (
         (None, {"fields": ("email", "password")}),
-        ("Informations", {"fields": ("first_name", "last_name", "role", "department", "hire_date", "manager", "onboarding_status")}),
+        ("Identité", {"fields": ("first_name", "last_name", "sexe", "date_naissance", "telephone", "photo")}),
+        ("Contrat", {"fields": ("matricule", "hire_date", "date_sortie", "type_contrat", "statut", "coefficient", "salaire_brut", "forfait_jour", "tickets_restaurant", "cadre")}),
+        ("Organisation", {"fields": ("role", "service", "position", "site", "manager", "agence_interim")}),
         ("Permissions", {"fields": ("is_active", "is_staff", "is_superuser", "groups", "user_permissions")}),
         ("Dates", {"fields": ("last_login", "date_joined")}),
     )
@@ -19,5 +33,5 @@ class UserAdmin(BaseUserAdmin):
             "fields": ("email", "password1", "password2"),
         }),
     )
-    search_fields = ["email", "first_name", "last_name"]
+    search_fields = ["email", "first_name", "last_name", "matricule"]
     ordering = ["email"]
