@@ -2,12 +2,14 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.shortcuts import redirect
-from rest_framework import generics, permissions, status, viewsets
+from rest_framework import filters, generics, permissions, status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
 from mozilla_django_oidc.views import OIDCAuthenticationRequestView as BaseRequestView
 from mozilla_django_oidc.views import OIDCAuthenticationCallbackView as BaseCallback
+
+from django.db import models as db_models
 
 from .models import Site, User
 from .serializers import SiteSerializer, UserMeSerializer, UserSerializer
@@ -80,7 +82,8 @@ class MeView(generics.RetrieveAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
-    filterset_fields = ["site", "manager", "role", "department"]
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["first_name", "last_name", "email"]
 
     def get_queryset(self):
         user = self.request.user
@@ -98,9 +101,17 @@ class UserViewSet(viewsets.ModelViewSet):
 
         site = self.request.query_params.get("site")
         manager = self.request.query_params.get("manager")
+        search = self.request.query_params.get("search")
         if site:
             qs = qs.filter(site_id=site)
         if manager:
+            qs = qs.filter(manager_id=manager)
+        if search:
+            qs = qs.filter(
+                db_models.Q(first_name__icontains=search)
+                | db_models.Q(last_name__icontains=search)
+                | db_models.Q(email__icontains=search)
+            )
             qs = qs.filter(manager_id=manager)
 
         return qs
