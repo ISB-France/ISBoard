@@ -2,12 +2,13 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenVerifyView
-from apps.users.views import OIDCAuthenticationRequestView, OIDCCallbackView, MeView, UserViewSet, DevLoginView, LogoutView
+from apps.users.views import OIDCAuthenticationRequestView, OIDCCallbackView, MeView, UserViewSet, SiteViewSet, DevLoginView, LogoutView
 from apps.interviews.views import InterviewViewSet
 
 router = DefaultRouter()
 router.register("interviews", InterviewViewSet, basename="interview")
 router.register("users", UserViewSet, basename="user")
+router.register("sites", SiteViewSet, basename="site")
 
 urlpatterns = [
     path("admin/", admin.site.urls),

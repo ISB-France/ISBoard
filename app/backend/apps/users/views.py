@@ -9,8 +9,17 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from mozilla_django_oidc.views import OIDCAuthenticationRequestView as BaseRequestView
 from mozilla_django_oidc.views import OIDCAuthenticationCallbackView as BaseCallback
 
-from .models import User
-from .serializers import UserMeSerializer, UserSerializer
+from .models import Site, User
+from .serializers import SiteSerializer, UserMeSerializer, UserSerializer
+
+
+def get_subordinate_ids(user_id):
+    ids = set()
+    children = list(User.objects.filter(manager_id=user_id).values_list("id", flat=True))
+    for child_id in children:
+        ids.add(child_id)
+        ids.update(get_subordinate_ids(child_id))
+    return ids
 
 
 from django.utils.crypto import get_random_string
@@ -71,17 +80,44 @@ class MeView(generics.RetrieveAPIView):
 class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
+    filterset_fields = ["site", "manager", "role", "department"]
 
     def get_queryset(self):
-        if self.request.user.role == "rh":
-            return User.objects.all().select_related("manager")
-        return User.objects.filter(id=self.request.user.id)
+        user = self.request.user
+        qs = User.objects.select_related("manager", "site")
+
+        if user.role == "rh":
+            qs = qs.all()
+        elif user.role == "manager":
+            ids = get_subordinate_ids(user.id)
+            ids.add(user.id)
+            qs = qs.filter(id__in=ids)
+        else:
+            qs = qs.filter(id=user.id)
+
+        site = self.request.query_params.get("site")
+        manager = self.request.query_params.get("manager")
+        role = self.request.query_params.get("role")
+        if site:
+            qs = qs.filter(site_id=site)
+        if manager:
+            qs = qs.filter(manager_id=manager)
+        if role:
+            qs = qs.filter(role=role)
+
+        return qs
 
     def destroy(self, request, *args, **kwargs):
         return Response(
             {"error": "La suppression d'un utilisateur n'est pas autorisée"},
             status=status.HTTP_403_FORBIDDEN,
         )
+
+
+class SiteViewSet(viewsets.ReadOnlyModelViewSet):
+    queryset = Site.objects.all()
+    serializer_class = SiteSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 
 class DevLoginView(APIView):

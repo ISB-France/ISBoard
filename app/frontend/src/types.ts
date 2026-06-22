@@ -1,3 +1,8 @@
+export interface Site {
+  id: number;
+  name: string;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -5,6 +10,8 @@ export interface User {
   last_name: string;
   role: "rh" | "manager" | "employee";
   department: string;
+  site: number | null;
+  site_name: string;
   hire_date: string | null;
   manager: number | null;
   manager_name: string | null;
