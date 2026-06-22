@@ -47,10 +47,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         )}
       >
         <div className="flex items-center gap-3 px-6 py-6">
-          <div className="flex h-8 w-8 items-center justify-center rounded bg-isb-yellow font-display text-sm font-bold text-isb-brown">
-            I
-          </div>
-          <span className="font-display text-lg font-semibold">ISBoard</span>
+          <img src="/logo-white.png" alt="ISB France" className="h-8 w-auto" />
+          <span className="font-display text-lg font-semibold text-isb-yellow">ISBoard</span>
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {navItems
@@ -103,7 +101,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               {user?.first_name} {user?.last_name}
             </span>
             <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-isb-yellow text-isb-brown text-xs font-semibold">
+              <AvatarFallback className="text-xs font-semibold" style={{ backgroundColor: '#FFDD00', color: '#3B2800' }}>
                 {initials}
               </AvatarFallback>
             </Avatar>

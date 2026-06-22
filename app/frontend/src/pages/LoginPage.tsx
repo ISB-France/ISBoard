@@ -42,9 +42,7 @@ export default function LoginPage() {
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFAF5] p-4">
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-xl bg-isb-yellow">
-            <span className="font-display text-2xl font-bold text-isb-brown">I</span>
-          </div>
+          <img src="/logo-dark.png" alt="ISB France" className="mx-auto mb-4 h-14 w-auto" />
           <h1 className="font-display text-2xl font-bold text-isb-brown">ISBoard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Gestion des entretiens annuels et professionnels
@@ -63,7 +61,7 @@ export default function LoginPage() {
         </div>
 
         <form onSubmit={handleDevLogin} className="space-y-3">
-          <p className="text-xs text-muted-foreground">Mode développement</p>
+          <p className="text-xs text-muted-foreground">Connexion Mail</p>
           <Input
             type="email"
             placeholder="Email"
@@ -80,7 +78,7 @@ export default function LoginPage() {
           />
           {error && <p className="text-xs text-destructive">{error}</p>}
           <Button type="submit" disabled={loading} className="w-full" variant="outline">
-            {loading ? "Connexion..." : "Connexion dev"}
+            {loading ? "Connexion..." : "Connexion"}
           </Button>
         </form>
       </div>
