@@ -88,12 +88,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
         if user.role == "rh":
             qs = qs.all()
-        elif user.role == "manager":
-            ids = get_subordinate_ids(user.id)
-            ids.add(user.id)
-            qs = qs.filter(id__in=ids)
         else:
-            qs = qs.filter(id=user.id)
+            ids = get_subordinate_ids(user.id)
+            if ids:
+                ids.add(user.id)
+                qs = qs.filter(id__in=ids)
+            else:
+                qs = qs.filter(id=user.id)
 
         site = self.request.query_params.get("site")
         manager = self.request.query_params.get("manager")
