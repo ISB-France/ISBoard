@@ -98,13 +98,10 @@ class UserViewSet(viewsets.ModelViewSet):
 
         site = self.request.query_params.get("site")
         manager = self.request.query_params.get("manager")
-        role = self.request.query_params.get("role")
         if site:
             qs = qs.filter(site_id=site)
         if manager:
             qs = qs.filter(manager_id=manager)
-        if role:
-            qs = qs.filter(role=role)
 
         return qs
 

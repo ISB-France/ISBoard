@@ -23,13 +23,13 @@ const onboardingLabel: Record<string, string> = {
 
 export default function Users() {
   const [siteFilter, setSiteFilter] = useState("");
-  const [roleFilter, setRoleFilter] = useState("");
+  const [managerFilter, setManagerFilter] = useState("");
 
   const { data: users, isLoading, error, refetch } = useQuery<User[]>({
-    queryKey: ["users", siteFilter, roleFilter],
+    queryKey: ["users", siteFilter, managerFilter],
     queryFn: () =>
       api
-        .get("/users/", { params: { site: siteFilter || undefined, role: roleFilter || undefined } })
+        .get("/users/", { params: { site: siteFilter || undefined, manager: managerFilter || undefined } })
         .then((r) => r.data),
   });
 
@@ -37,6 +37,8 @@ export default function Users() {
     queryKey: ["sites"],
     queryFn: () => api.get("/sites/").then((r) => r.data),
   });
+
+  const managers = users?.filter((u) => users.some((e) => e.manager === u.id)) ?? [];
 
   if (isLoading) return <LoadingScreen />;
   if (error) return <ErrorScreen message="Impossible de charger les utilisateurs" onRetry={refetch} />;
@@ -59,14 +61,16 @@ export default function Users() {
           ))}
         </select>
         <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
+          value={managerFilter}
+          onChange={(e) => setManagerFilter(e.target.value)}
           className="h-10 rounded-md border border-border bg-white px-3 text-sm"
         >
-          <option value="">Tous les rôles</option>
-          <option value="rh">RH</option>
-          <option value="manager">Manager</option>
-          <option value="employee">Employé</option>
+          <option value="">Tous les N-1</option>
+          {managers.map((m) => (
+            <option key={m.id} value={m.id}>
+              {m.first_name} {m.last_name}
+            </option>
+          ))}
         </select>
       </div>
 
