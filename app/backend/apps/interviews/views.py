@@ -216,6 +216,15 @@ class InterviewViewSet(viewsets.ModelViewSet):
         response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
 
+    @action(detail=True, methods=["post"])
+    def remove_document(self, request, pk=None):
+        interview = self.get_object()
+        if interview.document:
+            interview.document.delete()
+            interview.document = None
+            interview.save(update_fields=["document"])
+        return Response({"status": "ok"})
+
 
 class InterviewTemplateViewSet(viewsets.ModelViewSet):
     queryset = InterviewTemplate.objects.all()

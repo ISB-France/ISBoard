@@ -198,12 +198,17 @@ export default function Interviews() {
                           {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
                             <>
                               {iv.document ? (
-                                <a href={iv.document} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
-                                  <Button variant="ghost" size="sm">
-                                    <Upload className="mr-1 h-4 w-4" />
-                                    Document
+                                <>
+                                  <a href={iv.document} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                                    <Button variant="ghost" size="sm">
+                                      <Upload className="mr-1 h-4 w-4" />
+                                      Document
+                                    </Button>
+                                  </a>
+                                  <Button variant="ghost" size="sm" onClick={async (e) => { e.stopPropagation(); await api.post(`/interviews/${iv.id}/remove_document/`); queryClient.invalidateQueries({ queryKey: ["interviews"] }); }}>
+                                    <Trash2 className="h-4 w-4 text-red-500" />
                                   </Button>
-                                </a>
+                                </>
                               ) : (
                                 <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setUploadTargetId(iv.id); fileInputRef.current?.click(); }}>
                                   <Upload className="mr-1 h-4 w-4" />
