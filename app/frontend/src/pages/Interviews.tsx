@@ -220,7 +220,7 @@ export default function Interviews() {
                     ) : (
                       <>
                         <Button variant="ghost" size="sm" onClick={() => navigate(`/interviews/${iv.id}`)}>
-                          {iv.status === "draft" ? "Commencer" : "Voir"}
+                          {iv.status === "draft" ? "Commencer" : iv.status === "in_progress" ? "Reprendre" : "Voir"}
                         </Button>
                         {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
                           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/interviews/${iv.id}/edit`); }}>
