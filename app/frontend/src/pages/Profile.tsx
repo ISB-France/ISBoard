@@ -189,18 +189,25 @@ export default function Profile() {
             <p className="text-xs text-muted-foreground">Choisissez la couleur principale du portail.</p>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-7 gap-2">
+            <div className="grid grid-cols-7 gap-3">
               {themes.map((t) => (
                 <button
                   key={t.id}
                   onClick={() => setTheme(t.id)}
-                  className={`flex flex-col items-center gap-1 rounded-lg border-2 p-2 transition-colors hover:bg-muted/50 ${
-                    theme.id === t.id ? "border-primary bg-secondary" : "border-border"
+                  className={`flex flex-col items-center gap-1.5 rounded-lg border-2 p-2 transition-colors ${
+                    theme.id === t.id ? "border-primary bg-secondary" : "border-border bg-transparent hover:bg-muted/50"
                   }`}
                   title={t.label}
                 >
-                  <span className="text-lg">{t.icon}</span>
-                  <span className="text-[10px] text-muted-foreground">{t.label}</span>
+                  <div
+                    className="flex h-8 w-8 items-center justify-center rounded-md text-lg"
+                    style={{ backgroundColor: `hsl(${t.hue} 100% 12%)` }}
+                  >
+                    <span className="opacity-90">{t.icon}</span>
+                  </div>
+                  <span className={`text-[10px] ${theme.id === t.id ? "text-foreground font-medium" : "text-muted-foreground"}`}>
+                    {t.label}
+                  </span>
                 </button>
               ))}
             </div>

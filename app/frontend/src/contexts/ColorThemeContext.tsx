@@ -29,35 +29,29 @@ const STORAGE_KEY = "isb-color-theme";
 
 function applyTheme(hue: number, dark: boolean) {
   const root = document.documentElement;
-  if (dark) {
-    root.style.setProperty("--background", `${hue} 40% 8%`);
-    root.style.setProperty("--foreground", `${hue} 60% 90%`);
-    root.style.setProperty("--primary", `${hue} 60% 70%`);
-    root.style.setProperty("--primary-foreground", `${hue} 80% 20%`);
-    root.style.setProperty("--card", `0 0% 12%`);
-    root.style.setProperty("--card-foreground", `${hue} 60% 90%`);
-    root.style.setProperty("--secondary", `${hue} 40% 16%`);
-    root.style.setProperty("--border", `${hue} 30% 24%`);
-    root.style.setProperty("--muted", `${hue} 30% 20%`);
-    root.style.setProperty("--muted-foreground", `${hue} 30% 60%`);
-    root.style.setProperty("--accent", `${hue} 30% 20%`);
-    root.style.setProperty("--ring", `${hue} 60% 70%`);
-    root.classList.add("dark");
-  } else {
-    root.style.setProperty("--background", `${hue} 100% 97%`);
-    root.style.setProperty("--foreground", `${hue} 100% 12%`);
-    root.style.setProperty("--primary", `${hue} 100% 12%`);
-    root.style.setProperty("--primary-foreground", `46 100% 50%`);
-    root.style.setProperty("--card", `0 0% 100%`);
-    root.style.setProperty("--card-foreground", `${hue} 100% 12%`);
-    root.style.setProperty("--secondary", `${hue} 100% 93%`);
-    root.style.setProperty("--border", `${hue} 100% 88%`);
-    root.style.setProperty("--muted", `${hue} 16% 88%`);
-    root.style.setProperty("--muted-foreground", `${hue} 18% 48%`);
-    root.style.setProperty("--accent", `${hue} 16% 88%`);
-    root.style.setProperty("--ring", `${hue} 100% 12%`);
-    root.classList.remove("dark");
-  }
+  const bgLight = dark ? 8 : 97;
+  const fgLight = dark ? 90 : 12;
+  const satBg = dark ? 40 : 100;
+  const satFg = dark ? 60 : 100;
+  const satSec = dark ? 40 : 100;
+  const satMut = dark ? 30 : 16;
+  const satMutFg = dark ? 30 : 18;
+  const satBorder = dark ? 30 : 100;
+  const satAcc = dark ? 30 : 16;
+
+  root.style.setProperty("--background", `${hue} ${satBg}% ${bgLight}%`);
+  root.style.setProperty("--foreground", `${hue} ${satFg}% ${fgLight}%`);
+  root.style.setProperty("--primary", dark ? `${hue} 60% 70%` : `${hue} 100% 12%`);
+  root.style.setProperty("--primary-foreground", dark ? `${hue} 80% 20%` : `46 100% 50%`);
+  root.style.setProperty("--card", dark ? `0 0% 12%` : `0 0% 100%`);
+  root.style.setProperty("--card-foreground", `${hue} ${satFg}% ${fgLight}%`);
+  root.style.setProperty("--secondary", `${hue} ${satSec}% ${dark ? 16 : 93}%`);
+  root.style.setProperty("--border", `${hue} ${satBorder}% ${dark ? 24 : 88}%`);
+  root.style.setProperty("--muted", `${hue} ${satMut}% ${dark ? 20 : 88}%`);
+  root.style.setProperty("--muted-foreground", `${hue} ${satMutFg}% ${dark ? 60 : 48}%`);
+  root.style.setProperty("--accent", `${hue} ${satAcc}% ${dark ? 20 : 88}%`);
+  root.style.setProperty("--ring", dark ? `${hue} 60% 70%` : `${hue} 100% 12%`);
+  root.classList.toggle("dark", dark);
 }
 
 interface ThemeContextType {
@@ -85,6 +79,7 @@ export function ColorThemeProvider({ children }: { children: ReactNode }) {
   const setTheme = (id: string) => {
     const found = THEMES.find((t) => t.id === id);
     if (found) {
+      applyTheme(found.hue, found.dark);
       setThemeState(found);
       localStorage.setItem(STORAGE_KEY, id);
     }
