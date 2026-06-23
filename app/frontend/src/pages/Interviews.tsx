@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Download, Trash2, Upload } from "lucide-react";
+import { Plus, Download, Trash2, Upload, X } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -206,7 +206,7 @@ export default function Interviews() {
                                     </Button>
                                   </a>
                                   <Button variant="ghost" size="sm" onClick={async (e) => { e.stopPropagation(); await api.post(`/interviews/${iv.id}/remove_document/`); queryClient.invalidateQueries({ queryKey: ["interviews"] }); }}>
-                                    <Trash2 className="h-4 w-4 text-red-500" />
+                                    <X className="h-4 w-4 text-muted-foreground hover:text-red-500" />
                                   </Button>
                                 </>
                               ) : (
