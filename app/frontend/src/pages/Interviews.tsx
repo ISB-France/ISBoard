@@ -78,7 +78,7 @@ export default function Interviews() {
       </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
-        {currentUser?.role && !["employee", "stagiaire", "alternant"].includes(currentUser.role) && (
+        {currentUser?.role === "manager" && (
           <select
             value={scope}
             onChange={(e) => setScope(e.target.value)}
