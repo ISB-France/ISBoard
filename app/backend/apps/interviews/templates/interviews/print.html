@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ interview.get_type_display }} - {{ interview.employee.get_full_name }}</title>
+  <style>
+    @page { margin: 0; size: A4; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { margin: 2cm; font-family: 'Helvetica', 'Arial', sans-serif; font-size: 10pt; color: #1a1a1a; line-height: 1.5; }
+
+    h1 { font-size: 20pt; text-align: center; color: #1a1a1a; margin-bottom: 2pt; letter-spacing: 1pt; }
+    .subtitle { text-align: center; color: #666; font-size: 9pt; margin-bottom: 24pt; }
+
+    h2 { font-size: 12pt; color: #1a1a1a; margin-bottom: 10pt; padding-bottom: 4pt; border-bottom: 1.5pt solid #1a1a1a; text-transform: uppercase; letter-spacing: 0.5pt; }
+
+    .section { margin-bottom: 20pt; }
+    .section-title { font-size: 12pt; font-weight: bold; margin-bottom: 10pt; padding-bottom: 4pt; border-bottom: 1.5pt solid #1a1a1a; text-transform: uppercase; letter-spacing: 0.5pt; }
+
+    .info-grid { width: 100%; border-collapse: collapse; margin-bottom: 4pt; }
+    .info-grid td { padding: 2.5pt 4pt; vertical-align: top; font-size: 9.5pt; }
+    .info-grid .cat { font-weight: bold; font-size: 10pt; padding-top: 8pt; padding-bottom: 3pt; color: #1a1a1a; }
+    .info-grid .label { color: #555; width: 30%; font-size: 9pt; }
+    .info-grid .value { color: #1a1a1a; font-size: 9.5pt; }
+
+    .two-col { display: flex; gap: 24pt; margin-bottom: 8pt; }
+    .col { flex: 1; }
+
+    .theme { margin-bottom: 14pt; page-break-inside: avoid; }
+    .theme-name { font-size: 11pt; font-weight: bold; color: #1a1a1a; margin-bottom: 6pt; padding: 4pt 0; }
+    .q-item { margin-bottom: 8pt; }
+    .q-label { font-size: 9.5pt; color: #333; margin-bottom: 2pt; }
+    .q-answer { padding: 6pt 8pt; background: #f5f5f5; border-radius: 3pt; min-height: 16pt; white-space: pre-wrap; font-size: 9.5pt; color: #1a1a1a; }
+    .q-comment { padding: 5pt 8pt; background: #fafafa; border-left: 2pt solid #ccc; margin-top: 4pt; font-size: 9pt; color: #555; font-style: italic; }
+    .rating { display: flex; gap: 3pt; margin-top: 3pt; }
+    .rating-dot { display: inline-flex; width: 18pt; height: 18pt; border: 1pt solid #999; align-items: center; justify-content: center; font-size: 8pt; color: #666; border-radius: 2pt; }
+    .rating-dot.filled { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+
+    .bilan-section { margin-top: 6pt; }
+    .bilan-box { margin-bottom: 10pt; }
+    .bilan-label { font-size: 9.5pt; font-weight: bold; color: #333; margin-bottom: 3pt; }
+    .bilan-content { padding: 6pt 8pt; background: #f5f5f5; border-radius: 3pt; white-space: pre-wrap; font-size: 9.5pt; }
+
+    .signature-section { margin-top: 30pt; }
+    .signature-grid { width: 100%; border-collapse: collapse; margin-top: 20pt; }
+    .signature-grid td { width: 50%; vertical-align: top; padding: 0 12pt; }
+    .signature-role { font-size: 9pt; color: #555; font-weight: bold; margin-bottom: 2pt; }
+    .signature-name { font-size: 11pt; font-weight: bold; margin-bottom: 4pt; }
+    .signature-date { font-size: 9pt; color: #666; margin-bottom: 4pt; }
+    .signature-line { border-top: 1pt solid #1a1a1a; margin-top: 40pt; padding-top: 4pt; }
+
+    .legal-text { font-size: 8pt; color: #888; margin-top: 24pt; text-align: center; border-top: 0.5pt solid #ccc; padding-top: 10pt; }
+
+    .page-break { page-break-before: always; }
+    @media print { .no-print { display: none; } }
+    .no-print { text-align: center; margin-bottom: 16pt; }
+    .no-print button { padding: 8pt 24pt; font-size: 12pt; cursor: pointer; margin: 0 4pt; }
+  </style>
+</head>
+<body>
+
+<div class="no-print">
+  <button onclick="window.print()">Imprimer</button>
+  <button onclick="window.close()">Fermer</button>
+</div>
+
+<h1>ENTRETIEN D'ÉVALUATION</h1>
+<p class="subtitle">ISB France — {% now "d/m/Y" %}</p>
+
+<div class="section">
+  <h2>Informations générales</h2>
+  <table class="info-grid">
+    <tr><td class="label">Date d'entretien :</td><td class="value">{% now "d/m/Y" %}</td></tr>
+    <tr><td class="label">Nature de l'entretien :</td><td class="value">{{ interview.get_type_display }}</td></tr>
+    <tr><td class="label">Lieu :</td><td class="value">{{ interview.content.lieu|default:"—" }}</td></tr>
+  </table>
+
+  <div class="two-col">
+    <div class="col">
+      <table class="info-grid">
+        <tr><td class="cat">Manager</td></tr>
+        <tr><td class="label">Matricule</td><td class="value">{{ interview.manager.matricule|default:"—" }}</td></tr>
+        <tr><td class="label">Nom</td><td class="value">{{ interview.manager.last_name|default:"—" }}</td></tr>
+        <tr><td class="label">Prénom</td><td class="value">{{ interview.manager.first_name|default:"—" }}</td></tr>
+      </table>
+    </div>
+    <div class="col">
+      <table class="info-grid">
+        <tr><td class="cat">Collaborateur</td></tr>
+        <tr><td class="label">Matricule</td><td class="value">{{ interview.employee.matricule|default:"—" }}</td></tr>
+        <tr><td class="label">Nom</td><td class="value">{{ interview.employee.last_name|default:"—" }}</td></tr>
+        <tr><td class="label">Prénom</td><td class="value">{{ interview.employee.first_name|default:"—" }}</td></tr>
+        <tr><td class="label">Sexe</td><td class="value">{{ interview.employee.get_sexe_display|default:"—" }}</td></tr>
+        <tr><td class="label">Date naissance</td><td class="value">{{ interview.employee.date_naissance|date:"d/m/Y"|default:"—" }}</td></tr>
+        <tr><td class="label">Date embauche</td><td class="value">{{ interview.employee.hire_date|date:"d/m/Y"|default:"—" }}</td></tr>
+        <tr><td class="label">Type contrat</td><td class="value">{{ interview.employee.get_type_contrat_display|default:"—" }}</td></tr>
+        <tr><td class="label">Statut</td><td class="value">{{ interview.employee.get_statut_display|default:"—" }}</td></tr>
+        <tr><td class="label">Poste / Fonction</td><td class="value">{{ interview.employee.position.name|default:"—" }}</td></tr>
+        <tr><td class="label">Site</td><td class="value">{{ interview.employee.site.name|default:"—" }}</td></tr>
+        <tr><td class="label">Coefficient</td><td class="value">{{ interview.employee.coefficient|default:"—" }}</td></tr>
+        <tr><td class="label">Ancienneté</td><td class="value">{% if interview.employee.hire_date %}{{ interview.employee.hire_date|timesince }}{% else %}—{% endif %}</td></tr>
+      </table>
+    </div>
+  </div>
+</div>
+
+{% if career %}
+<div class="section">
+  <h2>Parcours professionnel</h2>
+  <table style="width:100%; border-collapse: collapse; font-size: 9pt;">
+    <tr style="border-bottom: 1pt solid #ccc;">
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase; width:20%;">Date</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Poste</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Service</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Site</th>
+    </tr>
+    {% for step in career %}
+    <tr style="border-bottom: 0.5pt solid #eee;">
+      <td style="padding:4pt 6pt;">{{ step.created_at|date:"d/m/Y" }}</td>
+      <td style="padding:4pt 6pt;">{{ step.content.employee_snapshot.position|default:"—" }}</td>
+      <td style="padding:4pt 6pt;">{{ step.content.employee_snapshot.service|default:"—" }}</td>
+      <td style="padding:4pt 6pt;">{{ step.content.employee_snapshot.site|default:"—" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% if history and interview.type != "professional" %}
+<div class="section">
+  <h2>Historique des entretiens</h2>
+  <table style="width:100%; border-collapse: collapse; font-size: 9pt;">
+    <tr style="border-bottom: 1pt solid #ccc;">
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Date</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Type</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Statut</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Manager</th>
+    </tr>
+    {% for h in history %}
+    <tr style="border-bottom: 0.5pt solid #eee;">
+      <td style="padding:4pt 6pt;">{{ h.created_at|date:"d/m/Y" }}</td>
+      <td style="padding:4pt 6pt;">{{ h.get_type_display }}</td>
+      <td style="padding:4pt 6pt;">{{ h.get_status_display }}</td>
+      <td style="padding:4pt 6pt;">{{ h.manager.get_full_name|default:h.manager.email }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+<div class="section">
+  <h2>Questions / Réponses</h2>
+  {% for section in sections %}
+  <div class="theme">
+    <div class="theme-name">{{ section.title }}</div>
+    {% for question in section.questions %}
+    <div class="q-item">
+      <div class="q-label">{{ question.label }}</div>
+      {% if question.type == "textarea" %}
+      <div class="q-answer">{{ question.answer|default:"—" }}</div>
+      {% elif question.type == "rating" %}
+      <div class="rating">
+        {% for i in "12345"|make_list %}
+        <div class="rating-dot{% if question.answer and forloop.counter <= question.answer %} filled{% endif %}">{{ forloop.counter }}</div>
+        {% endfor %}
+      </div>
+      {% elif question.type == "table" %}
+      <table style="width:100%; border-collapse:collapse; font-size:9pt; margin-top:4pt;">
+        <thead>
+          <tr style="border-bottom:1pt solid #ccc;">
+            <th style="padding:3pt 6pt; text-align:left; color:#555; font-size:8pt; font-weight:bold;">#</th>
+            {% for col in question.columns %}
+            <th style="padding:3pt 6pt; text-align:left; color:#555; font-size:8pt; font-weight:bold;">{{ col.label }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in question.answer %}
+          <tr style="border-bottom:0.5pt solid #eee;">
+            <td style="padding:4pt 6pt; color:#888; font-size:8pt;">{{ forloop.counter }}</td>
+            {% for cell in row %}
+            <td style="padding:4pt 6pt;">{{ cell|default:"—" }}</td>
+            {% endfor %}
+          </tr>
+          {% empty %}
+          <tr><td colspan="99" style="padding:6pt; color:#999; font-style:italic;">Aucune ligne</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+      {% if question.commentaire %}
+      <div class="q-comment">{{ question.commentaire }}</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+</div>
+
+{% if interview.content.bilan_collaborateur or interview.content.bilan_manager %}
+<div class="section page-break">
+  <h2>Bilans</h2>
+  {% if interview.content.bilan_collaborateur %}
+  <div class="bilan-box">
+    <div class="bilan-label">Bilan collaborateur</div>
+    <div class="bilan-content">{{ interview.content.bilan_collaborateur }}</div>
+  </div>
+  {% endif %}
+  {% if interview.content.bilan_manager %}
+  <div class="bilan-box">
+    <div class="bilan-label">Bilan manager</div>
+    <div class="bilan-content">{{ interview.content.bilan_manager }}</div>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="section signature-section page-break">
+  <h2>Validation et signatures</h2>
+  <p style="font-size:9pt; color:#555; margin-bottom:16pt;">
+    La signature du présent document atteste de la bonne prise de connaissance du contenu de l'entretien par les parties concernées.
+  </p>
+  <table class="signature-grid">
+    <tr>
+      <td>
+        <div class="signature-role">COLLABORATEUR</div>
+        <div class="signature-name">{{ interview.employee.first_name }} {{ interview.employee.last_name }}</div>
+        <div class="signature-date">Date : _________________________</div>
+        <div class="signature-line">Signature</div>
+      </td>
+      <td>
+        <div class="signature-role">MANAGER</div>
+        <div class="signature-name">{{ interview.manager.first_name }} {{ interview.manager.last_name }}</div>
+        <div class="signature-date">Date : _________________________</div>
+        <div class="signature-line">Signature</div>
+      </td>
+    </tr>
+  </table>
+</div>
+
+<p class="legal-text">Document généré automatiquement dans le cadre du processus d'entretien ISB.</p>
+
+</body>
+</html>

@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 36 100% 97%;
+  --foreground: 36 100% 12%;
+  --primary: 36 100% 12%;
+  --primary-foreground: 46 100% 50%;
+  --card: 0 0% 100%;
+  --card-foreground: 36 100% 12%;
+  --secondary: 36 100% 93%;
+  --border: 36 100% 88%;
+  --muted: 36 16% 88%;
+  --muted-foreground: 36 18% 48%;
+  --accent: 36 16% 88%;
+  --ring: 36 100% 12%;
+  --destructive: 0 80% 50%;
+  --destructive-foreground: 0 0% 100%;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.2s, color 0.2s;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 600;
+}
+
+::selection {
+  background: #FFDD00;
+  color: #3B2800;
+}
