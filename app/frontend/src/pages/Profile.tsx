@@ -85,7 +85,7 @@ export default function Profile() {
             <div className="relative">
               <Avatar className="h-24 w-24">
                 {user.icon ? (
-                  <span className="text-3xl">{user.icon}</span>
+                  <span className="flex h-full w-full items-center justify-center text-4xl">{user.icon}</span>
                 ) : user.photo ? (
                   <img src={user.photo} alt="" className="h-full w-full rounded-full object-cover" />
                 ) : (

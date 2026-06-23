@@ -185,7 +185,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </span>
             <Avatar className="h-8 w-8">
               {user?.icon ? (
-                <span className="text-sm">{user.icon}</span>
+                <span className="flex h-full w-full items-center justify-center text-lg">{user.icon}</span>
               ) : user?.photo ? (
                 <img src={user.photo} alt="" className="h-full w-full rounded-full object-cover" />
               ) : (
