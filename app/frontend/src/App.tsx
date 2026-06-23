@@ -12,6 +12,7 @@ import Templates from "./pages/Templates";
 import TemplateForm from "./pages/TemplateForm";
 import Users from "./pages/Users";
 import UserForm from "./pages/UserForm";
+import Profile from "./pages/Profile";
 
 function App() {
   const token = localStorage.getItem("access_token");
@@ -43,6 +44,7 @@ function App() {
       <Route path="/users" element={<Users />} />
       <Route path="/users/new" element={<UserForm />} />
       <Route path="/users/:id/edit" element={<UserForm />} />
+      <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   );

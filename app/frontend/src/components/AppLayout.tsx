@@ -179,7 +179,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             )}
           </div>
 
-          <div className="flex items-center gap-3">
+          <button className="flex items-center gap-3 hover:opacity-80" onClick={() => navigate("/profile")}>
             <span className="text-sm text-muted-foreground">
               {user?.first_name} {user?.last_name}
             </span>
@@ -188,7 +188,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 {initials}
               </AvatarFallback>
             </Avatar>
-          </div>
+          </button>
         </header>
         <main className="flex-1 p-6 lg:p-8">{children}</main>
       </div>
