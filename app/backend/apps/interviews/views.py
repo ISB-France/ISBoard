@@ -264,7 +264,7 @@ class CampaignViewSet(viewsets.ModelViewSet):
             return Response({"error": "La campagne n'a pas de modèle"}, status=status.HTTP_400_BAD_REQUEST)
 
         template = campaign.template
-        qs = User.objects.filter(is_active=True)
+        qs = User.objects.filter(is_active=True).exclude(role__in=("admin", "rh"))
 
         pf = campaign.population_filter or {}
         site = pf.get("site")
