@@ -50,42 +50,7 @@ export default function InterviewDetail() {
     api.get(`/interviews/${id}/`).then((r) => {
       setInterview(r.data);
       setLocation(r.data.content?.lieu || "");
-      const current: Section[] = r.data.content?.sections || [];
-      const previous: Section[] = r.data.previous_content || [];
-      if (previous.length > 0) {
-        const prevMap = new Map<string, string | number | null | (string | number | null)[][]>();
-        for (const ps of previous) {
-          for (const pq of ps.questions) {
-            prevMap.set(pq.id, pq.answer);
-          }
-        }
-        const merged = current.map((section) => ({
-          ...section,
-          questions: section.questions.map((q) => {
-            const prev = prevMap.get(q.id);
-            if (prev === undefined || prev === null) return q;
-            if (q.type === "textarea" && (q.answer === "" || q.answer === null)) {
-              return { ...q, answer: typeof prev === "string" ? prev : "" };
-            }
-            if (q.type === "rating" && (q.answer === "" || q.answer === null)) {
-              return { ...q, answer: typeof prev === "number" ? prev : null };
-            }
-            if (q.type === "table") {
-              const currentRows = Array.isArray(q.answer) ? (q.answer as (string | number | null)[][]) : [];
-              if (currentRows.length === 0) {
-                const prevRows = Array.isArray(prev) ? (prev as (string | number | null)[][]) : [];
-                if (prevRows.length > 0) {
-                  return { ...q, answer: prevRows.map((r) => [...r]) };
-                }
-              }
-            }
-            return q;
-          }),
-        }));
-        setSections(merged);
-      } else {
-        setSections(current);
-      }
+      setSections(r.data.content?.sections || []);
     });
   }, [id]);
 
