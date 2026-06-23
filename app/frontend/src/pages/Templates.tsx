@@ -1,12 +1,14 @@
+import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus, Copy } from "lucide-react";
+import { Plus, Copy, Trash2 } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import ErrorScreen from "../components/ErrorScreen";
+import ConfirmDialog from "../components/ConfirmDialog";
 import api from "../api";
 import type { InterviewTemplate } from "../types";
 
@@ -21,11 +23,15 @@ const typeLabel: Record<string, string> = {
 export default function Templates() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [typeFilter, setTypeFilter] = useState("");
+  const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const { data: templates, isLoading, error, refetch } = useQuery<InterviewTemplate[]>({
     queryKey: ["interview-templates"],
     queryFn: () => api.get("/interview-templates/").then((r) => r.data),
   });
+
+  const filtered = templates?.filter((t) => !typeFilter || t.type === typeFilter);
 
   const handleDuplicate = async (t: InterviewTemplate) => {
     await api.post("/interview-templates/", {
@@ -34,6 +40,13 @@ export default function Templates() {
       description: t.description,
       sections: t.sections,
     });
+    queryClient.invalidateQueries({ queryKey: ["interview-templates"] });
+  };
+
+  const handleDelete = async () => {
+    if (deleteId === null) return;
+    await api.delete(`/interview-templates/${deleteId}/`);
+    setDeleteId(null);
     queryClient.invalidateQueries({ queryKey: ["interview-templates"] });
   };
 
@@ -50,6 +63,19 @@ export default function Templates() {
         </Button>
       </div>
 
+      <div className="mb-4">
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="h-10 rounded-md border border-border bg-white px-3 text-sm"
+        >
+          <option value="">Tous les types</option>
+          {Object.entries(typeLabel).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
+      </div>
+
       <Card>
         <CardContent className="p-0">
           <table className="w-full">
@@ -63,14 +89,14 @@ export default function Templates() {
               </tr>
             </thead>
             <tbody>
-              {templates?.length === 0 && (
+              {filtered?.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-sm text-muted-foreground">
                     Aucun modèle trouvé
                   </td>
                 </tr>
               )}
-              {templates?.map((t) => (
+              {filtered?.map((t) => (
                 <tr key={t.id} className="border-b border-border last:border-0">
                   <td className="px-6 py-3 text-sm font-medium">{t.name}</td>
                   <td className="px-6 py-3">
@@ -90,6 +116,9 @@ export default function Templates() {
                       <Button variant="ghost" size="sm" onClick={() => navigate(`/templates/${t.id}/edit`)}>
                         Modifier
                       </Button>
+                      <Button variant="ghost" size="sm" onClick={() => setDeleteId(t.id)} title="Supprimer">
+                        <Trash2 className="h-4 w-4 text-red-500" />
+                      </Button>
                     </div>
                   </td>
                 </tr>
@@ -98,6 +127,16 @@ export default function Templates() {
           </table>
         </CardContent>
       </Card>
+
+      <ConfirmDialog
+        open={deleteId !== null}
+        title="Supprimer le modèle"
+        message="Êtes-vous sûr de vouloir supprimer ce modèle ? Cette action est irréversible."
+        confirmLabel="Supprimer"
+        cancelLabel="Annuler"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteId(null)}
+      />
     </AppLayout>
   );
 }
