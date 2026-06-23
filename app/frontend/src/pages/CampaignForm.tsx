@@ -15,6 +15,7 @@ export default function CampaignForm() {
   const isEdit = Boolean(id);
 
   const [name, setName] = useState("");
+  const [type, setType] = useState("");
   const [template, setTemplate] = useState("");
   const [description, setDescription] = useState("");
   const [startDate, setStartDate] = useState("");
@@ -23,10 +24,12 @@ export default function CampaignForm() {
   const [filterService, setFilterService] = useState("");
   const [selectedEmployees, setSelectedEmployees] = useState<number[]>([]);
 
-  const { data: templates } = useQuery<InterviewTemplate[]>({
+  const { data: allTemplates } = useQuery<InterviewTemplate[]>({
     queryKey: ["interview-templates"],
     queryFn: () => api.get("/interview-templates/").then((r) => r.data),
   });
+
+  const templates = type ? allTemplates?.filter((t) => t.type === type) : allTemplates;
 
   const { data: sites } = useQuery<Site[]>({
     queryKey: ["sites"],
@@ -62,8 +65,12 @@ export default function CampaignForm() {
       setFilterSite(pf.site ?? "");
       setFilterService(pf.service ?? "");
       setSelectedEmployees(pf.employees ?? []);
+      if (d.template && allTemplates) {
+        const tmpl = allTemplates.find((t) => t.id === d.template);
+        if (tmpl) setType(tmpl.type);
+      }
     });
-  }, [id]);
+  }, [id, allTemplates]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,13 +121,28 @@ export default function CampaignForm() {
               <Input value={name} onChange={(e) => setName(e.target.value)} required placeholder="Ex: EAP 2026" />
             </div>
             <div>
+              <label className="mb-1.5 block text-sm font-medium">Type d'entretien</label>
+              <select
+                value={type}
+                onChange={(e) => { setType(e.target.value); setTemplate(""); }}
+                className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm"
+              >
+                <option value="">Sélectionner...</option>
+                <option value="annual">Annuel</option>
+                <option value="professional">Professionnel</option>
+                <option value="bilan">Bilan</option>
+                <option value="forfait">Forfait jours</option>
+                <option value="fin_carriere">Fin de carrière</option>
+              </select>
+            </div>
+            <div>
               <label className="mb-1.5 block text-sm font-medium">Modèle</label>
               <select
                 value={template}
                 onChange={(e) => setTemplate(e.target.value)}
                 className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm"
               >
-                <option value="">Sélectionner...</option>
+                <option value="">{type ? "Sélectionner un modèle..." : "Sélectionnez d'abord un type"}</option>
                 {templates?.map((t) => (
                   <option key={t.id} value={t.id}>{t.name}</option>
                 ))}

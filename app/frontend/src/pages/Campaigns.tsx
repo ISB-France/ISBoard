@@ -10,12 +10,21 @@ import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import ErrorScreen from "../components/ErrorScreen";
 import api from "../api";
-import type { Campaign, User } from "../types";
+import type { Campaign, InterviewTemplate, User } from "../types";
+
+const typeLabel: Record<string, string> = {
+  annual: "Annuel",
+  professional: "Professionnel",
+  bilan: "Bilan",
+  forfait: "Forfait jours",
+  fin_carriere: "Fin de carrière",
+};
 
 export default function Campaigns() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [showHistory, setShowHistory] = useState(false);
+  const [typeFilter, setTypeFilter] = useState("");
   const [deleteId, setDeleteId] = useState<number | null>(null);
 
   const { data: currentUser } = useQuery<User>({
@@ -28,10 +37,19 @@ export default function Campaigns() {
     queryFn: () => api.get("/campaigns/").then((r) => r.data),
   });
 
+  const { data: templates } = useQuery<InterviewTemplate[]>({
+    queryKey: ["interview-templates"],
+    queryFn: () => api.get("/interview-templates/").then((r) => r.data),
+  });
+
+  const templateTypeMap = new Map((templates || []).map((t) => [t.id, t.type]));
+
   const today = new Date().toISOString().slice(0, 10);
-  const filtered = campaigns?.filter((c) =>
-    showHistory ? c.due_date < today : c.due_date >= today,
-  );
+  const filtered = campaigns?.filter((c) => {
+    if (showHistory ? c.due_date >= today : c.due_date < today) return false;
+    if (typeFilter && templateTypeMap.get(c.template ?? -1) !== typeFilter) return false;
+    return true;
+  });
 
   if (isLoading) return <LoadingScreen />;
   if (error) return <ErrorScreen message="Impossible de charger les campagnes" onRetry={refetch} />;
@@ -63,6 +81,16 @@ export default function Campaigns() {
             Historique
           </button>
         </div>
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="h-10 rounded-md border border-border bg-white px-3 text-sm"
+        >
+          <option value="">Tous les types</option>
+          {Object.entries(typeLabel).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
       </div>
 
       <Card>
@@ -71,6 +99,7 @@ export default function Campaigns() {
             <thead>
               <tr className="border-b border-border text-left text-xs font-semibold uppercase text-muted-foreground">
                 <th className="px-6 pb-3 pt-4">Nom</th>
+                <th className="px-6 pb-3 pt-4">Type</th>
                 <th className="px-6 pb-3 pt-4">Période</th>
                 <th className="px-6 pb-3 pt-4">Entretiens</th>
                 <th className="px-6 pb-3 pt-4"></th>
@@ -79,17 +108,28 @@ export default function Campaigns() {
             <tbody>
               {filtered?.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="px-6 py-8 text-center text-sm text-muted-foreground">
+                  <td colSpan={5} className="px-6 py-8 text-center text-sm text-muted-foreground">
                     {showHistory ? "Aucune campagne passée" : "Aucune campagne en cours"}
                   </td>
                 </tr>
               )}
-              {filtered?.map((c) => (
+              {filtered?.map((c) => {
+                const tType = templateTypeMap.get(c.template ?? -1);
+                return (
                 <tr key={c.id} className="border-b border-border last:border-0">
                   <td className="px-6 py-3">
                     <button className="text-sm font-medium hover:underline" onClick={() => navigate(`/campaigns/${c.id}`)}>
                       {c.name}
                     </button>
+                  </td>
+                  <td className="px-6 py-3">
+                    {tType ? (
+                      <Badge variant={tType as "annual" | "professional" | "bilan" | "forfait" | "fin_carriere"}>
+                        {typeLabel[tType]}
+                      </Badge>
+                    ) : (
+                      <span className="text-xs text-muted-foreground">—</span>
+                    )}
                   </td>
                   <td className="px-6 py-3 text-sm text-muted-foreground">
                     {c.start_date} → {c.due_date}
@@ -112,7 +152,8 @@ export default function Campaigns() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </CardContent>
