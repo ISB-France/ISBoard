@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, Copy } from "lucide-react";
 import { Card, CardContent } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -20,11 +20,22 @@ const typeLabel: Record<string, string> = {
 
 export default function Templates() {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const { data: templates, isLoading, error, refetch } = useQuery<InterviewTemplate[]>({
     queryKey: ["interview-templates"],
     queryFn: () => api.get("/interview-templates/").then((r) => r.data),
   });
+
+  const handleDuplicate = async (t: InterviewTemplate) => {
+    await api.post("/interview-templates/", {
+      name: `${t.name} (Copie)`,
+      type: t.type,
+      description: t.description,
+      sections: t.sections,
+    });
+    queryClient.invalidateQueries({ queryKey: ["interview-templates"] });
+  };
 
   if (isLoading) return <LoadingScreen />;
   if (error) return <ErrorScreen message="Impossible de charger les modèles" onRetry={refetch} />;
@@ -72,9 +83,14 @@ export default function Templates() {
                     {t.description || "-"}
                   </td>
                   <td className="px-6 py-3">
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/templates/${t.id}/edit`)}>
-                      Modifier
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" onClick={() => handleDuplicate(t)} title="Dupliquer">
+                        <Copy className="h-4 w-4" />
+                      </Button>
+                      <Button variant="ghost" size="sm" onClick={() => navigate(`/templates/${t.id}/edit`)}>
+                        Modifier
+                      </Button>
+                    </div>
                   </td>
                 </tr>
               ))}
