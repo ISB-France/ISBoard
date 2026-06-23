@@ -80,11 +80,18 @@ export interface Section {
   questions: Question[];
 }
 
-export interface Question {
+export interface TableColumn {
   id: string;
   label: string;
   type: "textarea" | "rating";
-  answer?: string | number | null;
+}
+
+export interface Question {
+  id: string;
+  label: string;
+  type: "textarea" | "rating" | "table";
+  answer?: string | number | null | (string | number | null)[][];
+  columns?: TableColumn[];
 }
 
 export interface Interview {

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Save, CheckCircle2, Download, PenSquare } from "lucide-react";
+import { Save, CheckCircle2, Download, PenSquare, Plus, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -9,7 +9,7 @@ import { Textarea } from "../components/ui/textarea";
 import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import api from "../api";
-import type { Interview, User } from "../types";
+import type { Interview, User, TableColumn } from "../types";
 
 type Question = {
   id: string;
@@ -57,6 +57,44 @@ export default function InterviewDetail() {
       const next = [...prev];
       const qs = [...next[sIdx].questions];
       qs[qIdx] = { ...qs[qIdx], answer: value };
+      next[sIdx] = { ...next[sIdx], questions: qs };
+      return next;
+    });
+  };
+
+  const updateTableCell = (sIdx: number, qIdx: number, rowIdx: number, colIdx: number, value: string | number | null) => {
+    setSections((prev) => {
+      const next = [...prev];
+      const qs = [...next[sIdx].questions];
+      const rows: (string | number | null)[][] = Array.isArray(qs[qIdx].answer) ? [...(qs[qIdx].answer as (string | number | null)[][])] : [];
+      if (!rows[rowIdx]) rows[rowIdx] = [];
+      rows[rowIdx] = [...rows[rowIdx]];
+      rows[rowIdx][colIdx] = value;
+      qs[qIdx] = { ...qs[qIdx], answer: rows };
+      next[sIdx] = { ...next[sIdx], questions: qs };
+      return next;
+    });
+  };
+
+  const addTableRow = (sIdx: number, qIdx: number) => {
+    setSections((prev) => {
+      const next = [...prev];
+      const qs = [...next[sIdx].questions];
+      const rows: (string | number | null)[][] = Array.isArray(qs[qIdx].answer) ? [...(qs[qIdx].answer as (string | number | null)[][])] : [];
+      rows.push([]);
+      qs[qIdx] = { ...qs[qIdx], answer: rows };
+      next[sIdx] = { ...next[sIdx], questions: qs };
+      return next;
+    });
+  };
+
+  const removeTableRow = (sIdx: number, qIdx: number, rowIdx: number) => {
+    setSections((prev) => {
+      const next = [...prev];
+      const qs = [...next[sIdx].questions];
+      const rows: (string | number | null)[][] = Array.isArray(qs[qIdx].answer) ? [...(qs[qIdx].answer as (string | number | null)[][])] : [];
+      rows.splice(rowIdx, 1);
+      qs[qIdx] = { ...qs[qIdx], answer: rows };
       next[sIdx] = { ...next[sIdx], questions: qs };
       return next;
     });
@@ -273,6 +311,83 @@ export default function InterviewDetail() {
                   {prev !== undefined && prev !== null && (
                     <p className="mt-1 text-xs text-muted-foreground/60 italic">
                       Note précédente : {String(prev)}/5
+                    </p>
+                  )}
+                  </>
+                )}
+                {q.type === "table" && q.columns && q.columns.length > 0 && (
+                  <>
+                  <div className="overflow-x-auto rounded-md border border-border">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border bg-muted/50">
+                          <th className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground w-8">#</th>
+                          {q.columns.map((col) => (
+                            <th key={col.id} className="px-3 py-2 text-left text-xs font-semibold text-muted-foreground">
+                              {col.label}
+                            </th>
+                          ))}
+                          {!isReadOnly && <th className="px-3 py-2 w-8"></th>}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          const rows: (string | number | null)[][] = Array.isArray(q.answer) ? (q.answer as (string | number | null)[][]) : [];
+                          return rows.map((row, rowIdx) => (
+                            <tr key={rowIdx} className="border-b border-border last:border-0">
+                              <td className="px-3 py-1.5 text-xs text-muted-foreground">{rowIdx + 1}</td>
+                              {q.columns!.map((col, colIdx) => (
+                                <td key={col.id} className="px-3 py-1.5">
+                                  {col.type === "textarea" ? (
+                                    <Textarea
+                                      rows={2}
+                                      value={typeof row[colIdx] === "string" ? row[colIdx] : ""}
+                                      onChange={(e) => updateTableCell(sIdx, qIdx, rowIdx, colIdx, e.target.value)}
+                                      disabled={isReadOnly}
+                                      className="min-w-[180px]"
+                                    />
+                                  ) : (
+                                    <div className="flex gap-1">
+                                      {[1, 2, 3, 4, 5].map((n) => (
+                                        <button
+                                          key={n}
+                                          type="button"
+                                          onClick={() => !isReadOnly && updateTableCell(sIdx, qIdx, rowIdx, colIdx, n)}
+                                          className={`flex h-8 w-8 items-center justify-center rounded-md border text-xs font-semibold transition-colors ${
+                                            row[colIdx] !== null && row[colIdx] !== undefined && n <= (row[colIdx] as number)
+                                              ? "border-isb-yellow bg-isb-yellow text-isb-brown"
+                                              : "border-border text-muted-foreground hover:border-isb-sand-mid"
+                                          } ${isReadOnly ? "cursor-default" : "cursor-pointer"}`}
+                                        >
+                                          {n}
+                                        </button>
+                                      ))}
+                                    </div>
+                                  )}
+                                </td>
+                              ))}
+                              {!isReadOnly && (
+                                <td className="px-3 py-1.5">
+                                  <Button type="button" size="icon" variant="ghost" onClick={() => removeTableRow(sIdx, qIdx, rowIdx)} className="h-7 w-7">
+                                    <X className="h-3 w-3" />
+                                  </Button>
+                                </td>
+                              )}
+                            </tr>
+                          ));
+                        })()}
+                      </tbody>
+                    </table>
+                  </div>
+                  {!isReadOnly && (
+                    <Button type="button" variant="outline" size="sm" onClick={() => addTableRow(sIdx, qIdx)} className="mt-2 gap-1">
+                      <Plus className="h-3 w-3" />
+                      Ajouter une ligne
+                    </Button>
+                  )}
+                  {prev !== undefined && prev !== null && Array.isArray(prev) && (
+                    <p className="mt-1 text-xs text-muted-foreground/60 italic">
+                      {prev.length} ligne(s) dans le tableau précédent
                     </p>
                   )}
                   </>

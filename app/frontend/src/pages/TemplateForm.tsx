@@ -6,7 +6,7 @@ import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import AppLayout from "../components/AppLayout";
 import api from "../api";
-import type { Section, Question } from "../types";
+import type { Section, Question, TableColumn } from "../types";
 
 let sectionCounter = 0;
 let questionCounter = 0;
@@ -14,6 +14,13 @@ let questionCounter = 0;
 function newSection(): Section {
   sectionCounter += 1;
   return { id: `s_${Date.now()}_${sectionCounter}`, title: "", questions: [] };
+}
+
+let columnCounter = 0;
+
+function newColumn(): TableColumn {
+  columnCounter += 1;
+  return { id: `c_${Date.now()}_${columnCounter}`, label: "", type: "textarea" };
 }
 
 function newQuestion(): Question {
@@ -88,7 +95,38 @@ export default function TemplateForm() {
   const updateQuestion = (sIdx: number, qIdx: number, field: "label" | "type", value: string) => {
     const next = [...sections];
     const qs = [...next[sIdx].questions];
-    qs[qIdx] = { ...qs[qIdx], [field]: value };
+    const updated = { ...qs[qIdx], [field]: value };
+    if (field === "type" && value === "table" && !updated.columns) {
+      updated.columns = [newColumn()];
+    }
+    qs[qIdx] = updated;
+    next[sIdx] = { ...next[sIdx], questions: qs };
+    setSections(next);
+  };
+
+  const addColumn = (sIdx: number, qIdx: number) => {
+    const next = [...sections];
+    const qs = [...next[sIdx].questions];
+    qs[qIdx] = { ...qs[qIdx], columns: [...(qs[qIdx].columns || []), newColumn()] };
+    next[sIdx] = { ...next[sIdx], questions: qs };
+    setSections(next);
+  };
+
+  const removeColumn = (sIdx: number, qIdx: number, cIdx: number) => {
+    const next = [...sections];
+    const qs = [...next[sIdx].questions];
+    const cols = qs[qIdx].columns?.filter((_, i) => i !== cIdx) || [];
+    qs[qIdx] = { ...qs[qIdx], columns: cols.length ? cols : undefined };
+    next[sIdx] = { ...next[sIdx], questions: qs };
+    setSections(next);
+  };
+
+  const updateColumn = (sIdx: number, qIdx: number, cIdx: number, field: "label" | "type", value: string) => {
+    const next = [...sections];
+    const qs = [...next[sIdx].questions];
+    const cols = [...(qs[qIdx].columns || [])];
+    cols[cIdx] = { ...cols[cIdx], [field]: value };
+    qs[qIdx] = { ...qs[qIdx], columns: cols };
     next[sIdx] = { ...next[sIdx], questions: qs };
     setSections(next);
   };
@@ -100,7 +138,13 @@ export default function TemplateForm() {
       .map((s) => ({
         ...s,
         title: s.title.trim(),
-        questions: s.questions.filter((q) => q.label.trim()).map((q) => ({ ...q, label: q.label.trim(), answer: "" })),
+        questions: s.questions.filter((q) => q.label.trim()).map((q) => ({
+          ...q,
+          label: q.label.trim(),
+          type: q.type,
+          answer: q.type === "table" ? [] : "",
+          columns: q.type === "table" ? (q.columns || []).filter((c) => c.label.trim()).map((c) => ({ ...c, label: c.label.trim() })) : undefined,
+        })),
       }));
 
     const payload = { name, type, description, sections: cleanSections };
@@ -203,33 +247,73 @@ export default function TemplateForm() {
                 <p className="text-sm text-muted-foreground">Aucune question. Cliquez sur + pour ajouter une question.</p>
               )}
               {section.questions.map((q, qIdx) => (
-                <div key={q.id} className="flex items-start gap-2">
-                  <div className="flex-1 space-y-1">
-                    <Input
-                      value={q.label}
-                      onChange={(e) => updateQuestion(sIdx, qIdx, "label", e.target.value)}
-                      placeholder="Texte de la question"
-                    />
-                    <select
-                      value={q.type}
-                      onChange={(e) => updateQuestion(sIdx, qIdx, "type", e.target.value)}
-                      className="h-8 rounded-md border border-border bg-white px-2 text-xs"
-                    >
-                      <option value="textarea">Texte long</option>
-                      <option value="rating">Note (1-5)</option>
-                    </select>
+                <div key={q.id} className="flex flex-col gap-2">
+                  <div className="flex items-start gap-2">
+                    <div className="flex-1 space-y-1">
+                      <Input
+                        value={q.label}
+                        onChange={(e) => updateQuestion(sIdx, qIdx, "label", e.target.value)}
+                        placeholder="Texte de la question"
+                      />
+                      <select
+                        value={q.type}
+                        onChange={(e) => updateQuestion(sIdx, qIdx, "type", e.target.value)}
+                        className="h-8 rounded-md border border-border bg-white px-2 text-xs"
+                      >
+                        <option value="textarea">Texte long</option>
+                        <option value="rating">Note (1-5)</option>
+                        <option value="table">Tableau</option>
+                      </select>
+                    </div>
+                    <div className="mt-1 flex flex-col">
+                      <button type="button" onClick={() => moveQuestion(sIdx, qIdx, -1)} disabled={qIdx === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30">
+                        <ChevronUp className="h-3 w-3" />
+                      </button>
+                      <button type="button" onClick={() => moveQuestion(sIdx, qIdx, 1)} disabled={qIdx === section.questions.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30">
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <Button type="button" size="icon" variant="ghost" onClick={() => removeQuestion(sIdx, qIdx)} className="mt-1">
+                      <X className="h-4 w-4" />
+                    </Button>
                   </div>
-                  <div className="mt-1 flex flex-col">
-                    <button type="button" onClick={() => moveQuestion(sIdx, qIdx, -1)} disabled={qIdx === 0} className="text-muted-foreground hover:text-foreground disabled:opacity-30">
-                      <ChevronUp className="h-3 w-3" />
-                    </button>
-                    <button type="button" onClick={() => moveQuestion(sIdx, qIdx, 1)} disabled={qIdx === section.questions.length - 1} className="text-muted-foreground hover:text-foreground disabled:opacity-30">
-                      <ChevronDown className="h-3 w-3" />
-                    </button>
-                  </div>
-                  <Button type="button" size="icon" variant="ghost" onClick={() => removeQuestion(sIdx, qIdx)} className="mt-1">
-                    <X className="h-4 w-4" />
-                  </Button>
+                  {q.type === "table" && (
+                    <div className="ml-4 space-y-2 rounded-md border border-border bg-muted/30 p-3">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-semibold text-muted-foreground">Colonnes</span>
+                        <Button type="button" size="sm" variant="outline" onClick={() => addColumn(sIdx, qIdx)} className="h-7 gap-1 text-xs">
+                          <Plus className="h-3 w-3" />
+                          Ajouter une colonne
+                        </Button>
+                      </div>
+                      {(!q.columns || q.columns.length === 0) && (
+                        <p className="text-xs text-muted-foreground">Aucune colonne. Ajoutez-en une.</p>
+                      )}
+                      {q.columns?.map((col, cIdx) => (
+                        <div key={col.id} className="flex items-start gap-2">
+                          <div className="flex-1 space-y-1">
+                            <Input
+                              value={col.label}
+                              onChange={(e) => updateColumn(sIdx, qIdx, cIdx, "label", e.target.value)}
+                              placeholder="Titre de la colonne"
+                              className="text-xs"
+                            />
+                            <select
+                              value={col.type}
+                              onChange={(e) => updateColumn(sIdx, qIdx, cIdx, "type", e.target.value)}
+                              className="h-7 rounded-md border border-border bg-white px-2 text-xs"
+                            >
+                              <option value="textarea">Texte long</option>
+                              <option value="rating">Note (1-5)</option>
+                            </select>
+                          </div>
+                          <Button type="button" size="icon" variant="ghost" onClick={() => removeColumn(sIdx, qIdx, cIdx)} className="mt-1 h-7 w-7">
+                            <X className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </CardContent>

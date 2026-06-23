@@ -139,6 +139,29 @@
         <div class="rating-dot{% if question.answer and forloop.counter <= question.answer %} filled{% endif %}">{{ forloop.counter }}</div>
         {% endfor %}
       </div>
+      {% elif question.type == "table" %}
+      <table style="width:100%; border-collapse:collapse; font-size:9pt; margin-top:4pt;">
+        <thead>
+          <tr style="border-bottom:1pt solid #ccc;">
+            <th style="padding:3pt 6pt; text-align:left; color:#555; font-size:8pt; font-weight:bold;">#</th>
+            {% for col in question.columns %}
+            <th style="padding:3pt 6pt; text-align:left; color:#555; font-size:8pt; font-weight:bold;">{{ col.label }}</th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in question.answer %}
+          <tr style="border-bottom:0.5pt solid #eee;">
+            <td style="padding:4pt 6pt; color:#888; font-size:8pt;">{{ forloop.counter }}</td>
+            {% for cell in row %}
+            <td style="padding:4pt 6pt;">{{ cell|default:"—" }}</td>
+            {% endfor %}
+          </tr>
+          {% empty %}
+          <tr><td colspan="99" style="padding:6pt; color:#999; font-style:italic;">Aucune ligne</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
       {% endif %}
       {% if question.commentaire %}
       <div class="q-comment">{{ question.commentaire }}</div>
