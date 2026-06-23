@@ -23,10 +23,13 @@ const downloadPdf = async (id: number) => {
 };
 
 const openPrint = async (id: number) => {
-  const res = await api.get(`/interviews/${id}/print/`, { responseType: "blob" });
-  const url = URL.createObjectURL(res.data);
-  const w = window.open(url, "_blank");
-  if (w) w.onload = () => URL.revokeObjectURL(url);
+  const w = window.open("", "_blank");
+  if (!w) return;
+  w.document.write("<html><body><p>Chargement...</p></body></html>");
+  const res = await api.get(`/interviews/${id}/print/`);
+  w.document.write(res.data);
+  w.document.close();
+  w.focus();
 };
 
 const statusLabel: Record<string, string> = {
