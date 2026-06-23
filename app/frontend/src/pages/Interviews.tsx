@@ -25,7 +25,6 @@ const downloadPdf = async (id: number) => {
 const openPrint = async (id: number) => {
   const w = window.open("", "_blank");
   if (!w) return;
-  w.document.write("<html><body><p>Chargement...</p></body></html>");
   const res = await api.get(`/interviews/${id}/print/`);
   w.document.write(res.data);
   w.document.close();
