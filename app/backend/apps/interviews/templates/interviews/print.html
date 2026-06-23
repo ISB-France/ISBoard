@@ -50,6 +50,7 @@
 
     .legal-text { font-size: 8pt; color: #888; margin-top: 24pt; text-align: center; border-top: 0.5pt solid #ccc; padding-top: 10pt; }
 
+    .page-break { page-break-before: always; }
     @media print { .no-print { display: none; } }
     .no-print { text-align: center; margin-bottom: 16pt; }
     .no-print button { padding: 8pt 24pt; font-size: 12pt; cursor: pointer; margin: 0 4pt; }
@@ -127,7 +128,7 @@
 </div>
 
 {% if interview.content.bilan_collaborateur or interview.content.bilan_manager %}
-<div class="section">
+<div class="section page-break">
   <h2>Bilans</h2>
   {% if interview.content.bilan_collaborateur %}
   <div class="bilan-box">
@@ -144,7 +145,7 @@
 </div>
 {% endif %}
 
-<div class="section signature-section">
+<div class="section signature-section page-break">
   <h2>Validation et signatures</h2>
   <p style="font-size:9pt; color:#555; margin-bottom:16pt;">
     La signature du présent document atteste de la bonne prise de connaissance du contenu de l'entretien par les parties concernées.
