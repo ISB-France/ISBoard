@@ -292,6 +292,24 @@ class NotificationViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        if self.request.user.role in ("admin", "rh"):
+            return Notification.objects.none()
+        from datetime import date, timedelta
+        from apps.interviews.models import Interview
+        today = date.today()
+        week_end = today + timedelta(days=7)
+        for iv in Interview.objects.filter(
+            manager=self.request.user,
+            status__in=("draft", "in_progress"),
+            due_date__gte=today,
+            due_date__lte=week_end,
+        ):
+            Notification.objects.get_or_create(
+                user=self.request.user,
+                message=f"Échéance dans {(iv.due_date - today).days} jour(s) : {iv.get_type_display()} pour {iv.employee.get_full_name() or iv.employee.email}",
+                link=f"/interviews/{iv.id}",
+                is_read=False,
+            )
         return Notification.objects.filter(user=self.request.user)
 
     @action(detail=True, methods=["post"])

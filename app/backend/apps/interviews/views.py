@@ -36,7 +36,16 @@ class InterviewPermission(permissions.BasePermission):
                 return True
             return False
         if view.action in ("update", "partial_update"):
-            return request.user.role in RH_ROLES
+            if request.user.role in RH_ROLES:
+                return True
+            if obj.manager == request.user:
+                return True
+            if obj.employee == request.user and not obj.employee.manager:
+                return True
+            from apps.users.views import get_subordinate_ids
+            if obj.employee_id in get_subordinate_ids(request.user.id):
+                return True
+            return False
         return False
 
 
@@ -48,9 +57,17 @@ class InterviewViewSet(viewsets.ModelViewSet):
     ordering_fields = ["due_date", "created_at", "updated_at", "status"]
     ordering = ["-due_date"]
 
+    def retrieve(self, request, *args, **kwargs):
+        from django.shortcuts import get_object_or_404
+        interview = get_object_or_404(Interview.objects.select_related("employee", "manager", "template", "campaign"), pk=kwargs["pk"])
+        self.check_object_permissions(request, interview)
+        serializer = self.get_serializer(interview)
+        return Response(serializer.data)
+
     def get_queryset(self):
         user = self.request.user
         qs = Interview.objects.select_related("employee", "manager", "template", "campaign")
+
         scope = self.request.query_params.get("scope")
 
         if user.role in RH_ROLES:
@@ -58,20 +75,20 @@ class InterviewViewSet(viewsets.ModelViewSet):
 
         elif user.role == "manager":
             if scope == "own":
-                qs = qs.filter(models.Q(manager=user) | models.Q(employee=user))
+                qs = qs.filter(models.Q(employee=user) | models.Q(manager=user))
             elif scope == "team":
                 from apps.users.views import get_subordinate_ids
                 ids = get_subordinate_ids(user.id)
                 if ids:
                     qs = qs.filter(employee_id__in=ids)
                 else:
-                    qs = qs.none()
+                    return qs.none()
             else:
                 subordinates = User.objects.filter(manager=user).values_list("id", flat=True)
                 if subordinates:
                     qs = qs.filter(employee_id__in=subordinates)
                 else:
-                    qs = qs.filter(manager=user)
+                    qs = qs.filter(models.Q(employee=user) | models.Q(manager=user))
 
         elif user.role == "employee" and not user.manager:
             qs = qs.filter(employee=user)
@@ -113,6 +130,28 @@ class InterviewViewSet(viewsets.ModelViewSet):
             users = User.objects.filter(is_active=True).values("id", "first_name", "last_name", "email")
             return Response(list(users))
         return Response([])
+
+    @action(detail=False, methods=["get"])
+    def export_csv(self, request):
+        import csv
+        from django.http import HttpResponse
+        qs = self.get_queryset().filter(status__in=("completed", "signed"))
+        response = HttpResponse(content_type="text/csv; charset=utf-8-sig")
+        response["Content-Disposition"] = 'attachment; filename="entretiens_historique.csv"'
+        writer = csv.writer(response)
+        writer.writerow(["ID", "Employé", "Email", "Manager", "Type", "Statut", "Date limite", "Date création"])
+        for iv in qs:
+            writer.writerow([
+                iv.id,
+                iv.employee.get_full_name() or iv.employee.email,
+                iv.employee.email,
+                iv.manager.get_full_name() or iv.manager.email,
+                iv.get_type_display(),
+                iv.get_status_display(),
+                iv.due_date,
+                iv.created_at.date(),
+            ])
+        return response
 
     @action(detail=True, methods=["get"])
     def print(self, request, pk=None):

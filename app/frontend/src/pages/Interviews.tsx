@@ -163,14 +163,19 @@ export default function Interviews() {
                   <td className="px-6 py-3">
                     <div className="flex items-center gap-1">
                       {showHistory ? (
-                        <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); downloadPdf(iv.id); }}>
-                          <Download className="mr-1 h-4 w-4" />
-                          PDF
-                        </Button>
+                        <>
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); window.open(`/api/interviews/${iv.id}/print/`, "_blank"); }}>
+                            Imprimer
+                          </Button>
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); downloadPdf(iv.id); }}>
+                            <Download className="mr-1 h-4 w-4" />
+                            PDF
+                          </Button>
+                        </>
                     ) : (
                       <>
                         <Button variant="ghost" size="sm" onClick={() => navigate(`/interviews/${iv.id}`)}>
-                          Voir
+                          {iv.status === "draft" ? "Commencer" : "Voir"}
                         </Button>
                         {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
                           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/interviews/${iv.id}/edit`); }}>

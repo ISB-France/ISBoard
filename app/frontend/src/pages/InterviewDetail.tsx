@@ -1,14 +1,13 @@
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Save, CheckCircle2, Download, PenSquare, Trash2 } from "lucide-react";
+import { Save, CheckCircle2, Download, PenSquare } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
 import { Textarea } from "../components/ui/textarea";
 import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
-import ConfirmDialog from "../components/ConfirmDialog";
 import api from "../api";
 import type { Interview, User } from "../types";
 
@@ -39,7 +38,6 @@ export default function InterviewDetail() {
   const [interview, setInterview] = useState<Interview | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [saving, setSaving] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["me"],
@@ -97,10 +95,9 @@ export default function InterviewDetail() {
 
   if (!interview) return <LoadingScreen />;
 
-  const isManagerOrRh = currentUser?.role === "admin" || currentUser?.role === "rh" || currentUser?.manager === currentUser?.id;
   const isOwn = interview.employee === currentUser?.id;
   const hasNoManager = currentUser && !currentUser.manager;
-  const canEdit = currentUser?.role === "admin" || currentUser?.role === "rh" || interview.manager === currentUser?.id || (isOwn && hasNoManager);
+  const canEdit = currentUser?.role === "admin" || currentUser?.role === "rh" || interview.manager === currentUser?.id || (isOwn && hasNoManager) || (currentUser?.role === "manager" && !isOwn);
   const isReadOnly = !canEdit || interview.status === "completed" || interview.status === "signed" || interview.status === "cancelled";
 
 
@@ -155,12 +152,6 @@ export default function InterviewDetail() {
             <Button variant="outline" size="sm" onClick={downloadPdf}>
               <Download className="mr-1 h-4 w-4" />
               Télécharger PDF
-            </Button>
-          )}
-          {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
-            <Button variant="destructive" size="sm" onClick={() => setShowDeleteConfirm(true)}>
-              <Trash2 className="mr-1 h-4 w-4" />
-              Supprimer
             </Button>
           )}
         </div>
@@ -264,15 +255,6 @@ export default function InterviewDetail() {
         </Card>
       ))}
 
-      <ConfirmDialog
-        open={showDeleteConfirm}
-        title="Supprimer l'entretien"
-        message="Êtes-vous sûr de vouloir supprimer cet entretien ? Cette action est irréversible."
-        confirmLabel="Supprimer"
-        cancelLabel="Annuler"
-        onConfirm={async () => { setShowDeleteConfirm(false); await api.delete(`/interviews/${id}/`); navigate("/interviews"); }}
-        onCancel={() => setShowDeleteConfirm(false)}
-      />
     </AppLayout>
   );
 }

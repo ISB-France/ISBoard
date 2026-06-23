@@ -6,6 +6,8 @@ from apps.users.models import Notification
 
 @receiver(post_save, sender="interviews.Interview")
 def notify_interview_created(sender, instance, created, **kwargs):
+    if instance.manager.role in ("admin", "rh"):
+        return
     if created:
         Notification.objects.create(
             user=instance.manager,
