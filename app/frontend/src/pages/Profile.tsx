@@ -84,10 +84,10 @@ export default function Profile() {
           <CardHeader className="flex flex-col items-center gap-4 pb-4 pt-8">
             <div className="relative">
               <Avatar className="h-24 w-24">
-                {user.photo ? (
-                  <img src={user.photo} alt="" className="h-full w-full rounded-full object-cover" />
-                ) : user.icon ? (
+                {user.icon ? (
                   <span className="text-3xl">{user.icon}</span>
+                ) : user.photo ? (
+                  <img src={user.photo} alt="" className="h-full w-full rounded-full object-cover" />
                 ) : (
                   <AvatarFallback className="text-xl font-semibold" style={{ backgroundColor: '#FFDD00', color: '#3B2800' }}>
                     {initials}
