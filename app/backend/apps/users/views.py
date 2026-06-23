@@ -82,12 +82,28 @@ class OIDCCallbackView(BaseCallback):
         return redirect(f"{frontend_url}/auth/callback?{query}")
 
 
-class MeView(generics.RetrieveAPIView):
+class MeView(generics.RetrieveUpdateAPIView):
     serializer_class = UserMeSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_object(self):
         return self.request.user
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+class ProfileAvatarView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        file = request.FILES.get("avatar")
+        if not file:
+            return Response({"error": "Aucun fichier fourni"}, status=status.HTTP_400_BAD_REQUEST)
+        user.photo = file
+        user.save(update_fields=["photo"])
+        serializer = UserMeSerializer(user, context={"request": request})
+        return Response(serializer.data)
 
 
 class UserViewSet(viewsets.ModelViewSet):

@@ -45,6 +45,7 @@ class UserSerializer(serializers.ModelSerializer):
             "position", "position_name",
             "site", "site_name",
             "manager", "agence_interim",
+            "icon",
         ]
 
     def create(self, validated_data):
@@ -57,6 +58,7 @@ class UserMeSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(source="site.name", read_only=True, default="")
     service_name = serializers.CharField(source="service.name", read_only=True, default="")
     position_name = serializers.CharField(source="position.name", read_only=True, default="")
+    photo = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -71,7 +73,13 @@ class UserMeSerializer(serializers.ModelSerializer):
             "position", "position_name",
             "site", "site_name",
             "manager", "manager_name", "agence_interim",
+            "icon",
         ]
+
+    def get_photo(self, obj):
+        if obj.photo:
+            return f"/media/{obj.photo.name}"
+        return None
 
     def get_manager_name(self, obj):
         if obj.manager:

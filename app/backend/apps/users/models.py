@@ -68,6 +68,7 @@ class User(AbstractUser):
     date_naissance = models.DateField(null=True, blank=True)
     telephone = models.CharField(max_length=50, blank=True, validators=[validate_phone])
     photo = models.ImageField(upload_to="photos/", null=True, blank=True)
+    icon = models.CharField(max_length=10, blank=True, default="")
 
     # Contrat
     matricule = models.CharField(max_length=50, unique=True, blank=True)
