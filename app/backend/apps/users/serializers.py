@@ -31,6 +31,7 @@ class UserSerializer(serializers.ModelSerializer):
     site_name = serializers.CharField(source="site.name", read_only=True, default="")
     service_name = serializers.CharField(source="service.name", read_only=True, default="")
     position_name = serializers.CharField(source="position.name", read_only=True, default="")
+    manager_name = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -44,10 +45,15 @@ class UserSerializer(serializers.ModelSerializer):
             "service", "service_name",
             "position", "position_name",
             "site", "site_name",
-            "manager", "agence_interim",
+            "manager", "manager_name", "agence_interim",
             "icon",
             "preferences",
         ]
+
+    def get_manager_name(self, obj):
+        if obj.manager:
+            return obj.manager.get_full_name() or obj.manager.email
+        return None
 
     def create(self, validated_data):
         validated_data["username"] = validated_data["email"]
