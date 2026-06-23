@@ -37,7 +37,6 @@ export default function InterviewDetail() {
   const navigate = useNavigate();
   const [interview, setInterview] = useState<Interview | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
-  const [location, setLocation] = useState("");
   const [saving, setSaving] = useState(false);
 
   const { data: currentUser } = useQuery<User>({
@@ -49,7 +48,6 @@ export default function InterviewDetail() {
     if (!id) return;
     api.get(`/interviews/${id}/`).then((r) => {
       setInterview(r.data);
-      setLocation(r.data.content?.lieu || "");
       setSections(r.data.content?.sections || []);
     });
   }, [id]);
@@ -106,7 +104,7 @@ export default function InterviewDetail() {
     if (!interview) return;
     setSaving(true);
     try {
-      const payload: Record<string, unknown> = { content: { ...interview.content, sections, lieu: location } };
+      const payload: Record<string, unknown> = { content: { ...interview.content, sections, lieu: interview.employee_detail?.site_name || "" } };
       if (newStatus) {
         payload.status = newStatus;
       } else if (interview.status === "draft") {
@@ -221,17 +219,7 @@ export default function InterviewDetail() {
             </div>
             <div>
               <span className="text-xs font-semibold uppercase text-muted-foreground">Lieu</span>
-              {isReadOnly ? (
-                <p className="text-sm font-medium">{location || "—"}</p>
-              ) : (
-                <input
-                  type="text"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="mt-0.5 h-8 w-full rounded-md border border-border bg-white px-2 text-sm"
-                  placeholder="Saisir le lieu..."
-                />
-              )}
+              <p className="text-sm font-medium">{interview.employee_detail?.site_name || "—"}</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-6">
