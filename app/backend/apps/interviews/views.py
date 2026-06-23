@@ -106,9 +106,34 @@ class InterviewViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         template = serializer.validated_data.get("template")
-        if template and not serializer.validated_data.get("content"):
-            serializer.validated_data["content"] = {"sections": list(template.sections)}
+        employee = serializer.validated_data.get("employee")
+        content = serializer.validated_data.get("content")
+        if not content:
+            content = {}
+        if template and not content.get("sections"):
+            content["sections"] = list(template.sections)
+        if employee:
+            content["employee_snapshot"] = {
+                "position": employee.position.name if employee.position else None,
+                "service": employee.service.name if employee.service else None,
+                "site": employee.site.name if employee.site else None,
+                "coefficient": employee.coefficient,
+            }
+        serializer.validated_data["content"] = content
         serializer.save(manager=self.request.user)
+
+    def perform_update(self, serializer):
+        employee = serializer.instance.employee
+        content = serializer.validated_data.get("content", serializer.instance.content or {})
+        if isinstance(content, dict):
+            content["employee_snapshot"] = {
+                "position": employee.position.name if employee.position else None,
+                "service": employee.service.name if employee.service else None,
+                "site": employee.site.name if employee.site else None,
+                "coefficient": employee.coefficient,
+            }
+        serializer.validated_data["content"] = content
+        serializer.save()
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
@@ -157,10 +182,15 @@ class InterviewViewSet(viewsets.ModelViewSet):
         interview = self.get_object()
         sections = interview.content.get("sections", [])
         history = Interview.objects.filter(employee=interview.employee).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at")[:6]
+        career = Interview.objects.filter(
+            employee=interview.employee,
+            type="professional",
+        ).order_by("created_at")
         return render(request, "interviews/print.html", {
             "interview": interview,
             "sections": sections,
             "history": history,
+            "career": career,
         })
 
     @action(detail=True, methods=["get"])
@@ -169,10 +199,15 @@ class InterviewViewSet(viewsets.ModelViewSet):
         interview = self.get_object()
         sections = interview.content.get("sections", [])
         history = Interview.objects.filter(employee=interview.employee).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at")[:6]
+        career = Interview.objects.filter(
+            employee=interview.employee,
+            type="professional",
+        ).order_by("created_at")
         html = render_to_string("interviews/print.html", {
             "interview": interview,
             "sections": sections,
             "history": history,
+            "career": career,
         })
         pdf = HTML(string=html).write_pdf()
         emp = interview.employee
@@ -232,7 +267,15 @@ class CampaignViewSet(viewsets.ModelViewSet):
                 type=template.type,
                 defaults={
                     "template": template,
-                    "content": {"sections": list(template.sections)},
+                    "content": {
+                        "sections": list(template.sections),
+                        "employee_snapshot": {
+                            "position": user.position.name if user.position else None,
+                            "service": user.service.name if user.service else None,
+                            "site": user.site.name if user.site else None,
+                            "coefficient": user.coefficient,
+                        },
+                    },
                     "due_date": campaign.due_date,
                     "manager": user.manager or request.user,
                 },

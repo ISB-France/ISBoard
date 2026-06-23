@@ -101,6 +101,28 @@
   </div>
 </div>
 
+{% if career %}
+<div class="section">
+  <h2>Parcours professionnel</h2>
+  <table style="width:100%; border-collapse: collapse; font-size: 9pt;">
+    <tr style="border-bottom: 1pt solid #ccc;">
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase; width:20%;">Date</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Poste</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Service</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Site</th>
+    </tr>
+    {% for step in career %}
+    <tr style="border-bottom: 0.5pt solid #eee;">
+      <td style="padding:4pt 6pt;">{{ step.created_at|date:"d/m/Y" }}</td>
+      <td style="padding:4pt 6pt;">{{ step.content.employee_snapshot.position|default:"—" }}</td>
+      <td style="padding:4pt 6pt;">{{ step.content.employee_snapshot.service|default:"—" }}</td>
+      <td style="padding:4pt 6pt;">{{ step.content.employee_snapshot.site|default:"—" }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
 {% if history %}
 <div class="section">
   <h2>Historique des entretiens</h2>
