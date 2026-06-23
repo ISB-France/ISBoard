@@ -2,6 +2,7 @@ import type { Config } from "tailwindcss";
 
 export default {
   content: ["./index.html", "./src/**/*.{ts,tsx}"],
+  darkMode: "class",
   theme: {
     extend: {
       colors: {
@@ -14,34 +15,34 @@ export default {
           coral: "#F08159",
           blush: "#F8BBAB",
         },
-        background: "#FDFAF5",
-        foreground: "#3B2800",
+        background: "hsl(var(--background))",
+        foreground: "hsl(var(--foreground))",
         primary: {
-          DEFAULT: "#3B2800",
-          foreground: "#FFFFFF",
+          DEFAULT: "hsl(var(--primary))",
+          foreground: "hsl(var(--primary-foreground))",
         },
         secondary: {
-          DEFAULT: "#FEEAD3",
-          foreground: "#3B2800",
+          DEFAULT: "hsl(var(--secondary))",
+          foreground: "hsl(var(--foreground))",
         },
         destructive: {
           DEFAULT: "#F08159",
           foreground: "#FFFFFF",
         },
         accent: {
-          DEFAULT: "#FFDD00",
-          foreground: "#3B2800",
+          DEFAULT: "hsl(var(--accent))",
+          foreground: "hsl(var(--foreground))",
         },
         muted: {
-          DEFAULT: "#FEEAD3",
-          foreground: "#D19571",
+          DEFAULT: "hsl(var(--muted))",
+          foreground: "hsl(var(--muted-foreground))",
         },
         card: {
-          DEFAULT: "#FFFFFF",
-          foreground: "#3B2800",
+          DEFAULT: "hsl(var(--card))",
+          foreground: "hsl(var(--card-foreground))",
         },
-        border: "#FDD5A5",
-        ring: "#D19571",
+        border: "hsl(var(--border))",
+        ring: "hsl(var(--ring))",
       },
       fontFamily: {
         display: ['"Plus Jakarta Sans"', "sans-serif"],

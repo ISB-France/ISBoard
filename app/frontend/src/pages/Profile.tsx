@@ -1,12 +1,13 @@
 import { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Shield, Camera, Save, X } from "lucide-react";
+import { Shield, Camera, Save, X, Palette } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
+import { useColorTheme } from "../contexts/ColorThemeContext";
 import api from "../api";
 import type { User } from "../types";
 
@@ -20,6 +21,7 @@ const EMOJIS = [
 export default function Profile() {
   const queryClient = useQueryClient();
   const fileRef = useRef<HTMLInputElement>(null);
+  const { theme, themes, setTheme } = useColorTheme();
   const [editing, setEditing] = useState(false);
   const [showIcons, setShowIcons] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -195,6 +197,32 @@ export default function Profile() {
               className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
               placeholder="Décrivez vos préférences..."
             />
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <h2 className="font-display text-lg font-semibold flex items-center gap-2">
+              <Palette className="h-4 w-4" /> Thème
+            </h2>
+            <p className="text-xs text-muted-foreground">Choisissez la couleur principale du portail.</p>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-7 gap-2">
+              {themes.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => setTheme(t.id)}
+                  className={`flex flex-col items-center gap-1 rounded-lg border-2 p-2 transition-colors hover:bg-muted/50 ${
+                    theme.id === t.id ? "border-primary bg-secondary" : "border-border"
+                  }`}
+                  title={t.label}
+                >
+                  <span className="text-lg">{t.icon}</span>
+                  <span className="text-[10px] text-muted-foreground">{t.label}</span>
+                </button>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
