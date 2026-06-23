@@ -13,6 +13,7 @@ import TemplateForm from "./pages/TemplateForm";
 import Users from "./pages/Users";
 import UserForm from "./pages/UserForm";
 import Profile from "./pages/Profile";
+import ThemeSync from "./components/ThemeSync";
 
 function App() {
   const token = localStorage.getItem("access_token");
@@ -28,8 +29,10 @@ function App() {
   }
 
   return (
-    <Routes>
-      <Route path="/" element={<Dashboard />} />
+    <>
+      <ThemeSync />
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
       <Route path="/interviews" element={<Interviews />} />
       <Route path="/interviews/new" element={<InterviewForm />} />
       <Route path="/interviews/:id" element={<InterviewDetail />} />
@@ -47,6 +50,7 @@ function App() {
       <Route path="/profile" element={<Profile />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
+    </>
   );
 }
 

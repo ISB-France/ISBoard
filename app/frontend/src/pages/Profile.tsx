@@ -193,7 +193,11 @@ export default function Profile() {
               {themes.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => setTheme(t.id)}
+                  onClick={async () => {
+                    setTheme(t.id);
+                    await api.patch("/auth/me/", { preferences: JSON.stringify({ theme: t.id }) });
+                    queryClient.invalidateQueries({ queryKey: ["me"] });
+                  }}
                   className={`flex flex-col items-center gap-1.5 rounded-lg border-2 p-2 transition-colors ${
                     theme.id === t.id ? "border-primary bg-secondary" : "border-border bg-transparent hover:bg-muted/50"
                   }`}

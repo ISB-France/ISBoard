@@ -27,6 +27,10 @@ const THEMES: ColorTheme[] = [
 
 const STORAGE_KEY = "isb-color-theme";
 
+export function getStoredThemeId(): string {
+  return localStorage.getItem(STORAGE_KEY) || "";
+}
+
 function applyTheme(hue: number, dark: boolean) {
   const root = document.documentElement;
   const bgLight = dark ? 8 : 97;
