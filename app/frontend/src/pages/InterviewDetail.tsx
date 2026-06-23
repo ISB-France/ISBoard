@@ -115,9 +115,7 @@ export default function InterviewDetail() {
       const res = await api.patch(`/interviews/${id}/`, payload);
       setInterview(res.data);
       setSections(res.data.content?.sections || []);
-      if (newStatus === "completed") {
-        navigate("/interviews");
-      }
+      navigate("/interviews");
     } catch {
       alert("Erreur lors de l'enregistrement");
     } finally {
