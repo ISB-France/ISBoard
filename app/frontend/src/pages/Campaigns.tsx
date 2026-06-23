@@ -67,6 +67,16 @@ export default function Campaigns() {
       </div>
 
       <div className="mb-6 flex flex-wrap items-center gap-3">
+        <select
+          value={typeFilter}
+          onChange={(e) => setTypeFilter(e.target.value)}
+          className="h-10 rounded-md border border-border bg-white px-3 text-sm"
+        >
+          <option value="">Tous les types</option>
+          {Object.entries(typeLabel).map(([k, v]) => (
+            <option key={k} value={k}>{v}</option>
+          ))}
+        </select>
         <div className="inline-flex rounded-md border border-border">
           <button
             className={`px-4 py-2 text-sm font-medium transition-colors ${!showHistory ? "bg-isb-yellow text-isb-brown" : "bg-white text-muted-foreground hover:bg-muted/50"}`}
@@ -81,16 +91,6 @@ export default function Campaigns() {
             Historique
           </button>
         </div>
-        <select
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          className="h-10 rounded-md border border-border bg-white px-3 text-sm"
-        >
-          <option value="">Tous les types</option>
-          {Object.entries(typeLabel).map(([k, v]) => (
-            <option key={k} value={k}>{v}</option>
-          ))}
-        </select>
       </div>
 
       <Card>
