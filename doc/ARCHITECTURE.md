@@ -1,0 +1,226 @@
+# Architecture & mode d'emploi
+
+## Structure du projet
+
+```
+├── app/
+│   ├── backend/          # Django 5
+│   │   ├── config/       # Settings, URLs, WSGI
+│   │   └── apps/
+│   │       ├── users/    # Auth, utilisateurs, sites, services, positions
+│   │       └── interviews/ # Entretiens, campagnes, modèles
+│   └── frontend/         # React + TypeScript + Vite
+│       └── src/
+│           ├── components/    # Composants réutilisables
+│           ├── components/ui/ # Primitives shadcn/ui
+│           ├── contexts/      # Contextes React (thème)
+│           ├── pages/         # Pages de l'application
+│           └── lib/           # Utilitaires
+├── doc/                  # Documentation
+│   └── guides/           # Guides (Entra ID, branches)
+├── docker-compose.yml    # 4 services : db, backend, frontend, adminer
+└── .env                  # Variables d'environnement
+```
+
+---
+
+## Backend — Django
+
+### Modèles principaux
+
+#### User (utilisateur)
+- **Identité** : email, nom, prénom, sexe, date naissance, téléphone, photo, icon (émoji)
+- **Contrat** : matricule, date embauche/sortie, type contrat (CDI/CDD/intérim/alternance/stage), statut (actif/inactif/sortie), coefficient, salaire brut, forfait jour, tickets resto, cadre
+- **Organisation** : service (FK), poste (FK), site (FK), manager (FK vers User), agence intérim
+- **Auth** : rôle (admin/rh/manager/employee/stagiaire/alternant), onboarding_status
+- **Préférences** : champ JSON `preferences` (stocke le thème couleur, etc.)
+
+#### Interview (entretien)
+- employee (FK User), manager (FK User)
+- campaign (FK), template (FK)
+- type : annual / professional / bilan / forfait / fin_carriere
+- status : draft / in_progress / completed / signed / cancelled
+- content : JSON (réponses aux questions)
+- document : fichier uploadé
+- Signature électronique via checkbox
+
+#### Campaign (campagne)
+- nom, description, template (FK)
+- dates début/échéance
+- population_filter : JSON (site, service, employés spécifiques)
+- Action `generate` : crée les entretiens pour la population ciblée
+
+#### InterviewTemplate (modèle d'entretien)
+- nom, type
+- sections : JSON (liste de sections avec questions)
+  - Types de questions : textarea / rating (1-5) / table (colonnes personnalisables)
+  - Les sections/questions sont ordonnées
+
+#### Modèles d'organisation
+- **Site** : nom, adresse
+- **Service** : nom
+- **Position** : nom
+
+#### Notification
+- user (FK), message, link, read (bool), created_at
+- Créées par signaux Django (création entretien, complétion, signature)
+- Commande management `check_upcoming` : notifications pour les entretiens à échéance proche
+
+### API REST
+
+| Endpoint | Méthodes | Description |
+|---|---|---|
+| `/api/auth/me/` | GET, PATCH | Profil utilisateur courant |
+| `/api/token/` | POST | JWT login |
+| `/api/token/refresh/` | POST | Rafraîchir JWT |
+| `/api/users/` | GET, POST | Liste/création utilisateurs |
+| `/api/users/{id}/` | GET, PUT, PATCH, DELETE | Détail/modification utilisateur |
+| `/api/users/import_csv/` | POST | Import CSV utilisateurs |
+| `/api/interviews/` | GET, POST | Liste/création entretiens |
+| `/api/interviews/{id}/` | GET, PUT, PATCH, DELETE | Détail/modification entretien |
+| `/api/interviews/{id}/print/` | GET | Version print d'un entretien |
+| `/api/interviews/{id}/pdf/` | GET | Génération PDF (WeasyPrint) |
+| `/api/interviews/stats/` | GET | Statistiques (total, par statut, etc.) |
+| `/api/interviews/employees/` | GET | Liste des employés pour le manager courant |
+| `/api/campaigns/` | GET, POST | Campagnes |
+| `/api/campaigns/{id}/generate/` | POST | Générer les entretiens d'une campagne |
+| `/api/interview-templates/` | GET, POST | Modèles d'entretien |
+| `/api/sites/` | GET | Sites |
+| `/api/services/` | GET, POST | Services |
+| `/api/positions/` | GET, POST | Postes |
+| `/api/notifications/` | GET | Notifications |
+| `/api/notifications/{id}/mark-read/` | POST | Marquer comme lu |
+
+### Sérialiseurs
+
+- **UserSerializer** : utilisé pour la liste/détail utilisateurs — inclut `site_name`, `service_name`, `position_name`, `manager_name` (read-only)
+- **UserMeSerializer** : utilisé pour `/auth/me/` — inclut en plus les compteurs d'entretiens
+- **InterviewSerializer** : entretiens avec réponses, documents, infos employé/manager
+- **CampaignSerializer** : campagnes avec filtre de population
+
+---
+
+## Frontend — React
+
+### Architecture des pages
+
+```
+/login                  → LoginPage          (auth Microsoft + dev)
+/auth/callback          → AuthCallback       (stocke les tokens JWT)
+/dashboard              → Dashboard          (stats, tableau des entretiens)
+/interviews             → Interviews         (liste avec filtres, actions)
+/interviews/new         → InterviewForm      (création)
+/interviews/:id         → InterviewDetail    (formulaire de réponse)
+/interviews/:id/edit    → InterviewForm      (édition)
+/campaigns              → Campaigns          (liste)
+/campaigns/new          → CampaignForm       (création)
+/campaigns/:id          → CampaignDetail     (détail, génération)
+/campaigns/:id/edit     → CampaignForm       (édition)
+/templates              → Templates          (liste)
+/templates/new          → TemplateForm       (création)
+/templates/:id/edit     → TemplateForm       (édition)
+/users                  → Users              (liste, arbre N-1)
+/users/new              → UserForm           (création)
+/users/:id/edit         → UserForm           (édition)
+/profile                → Profile            (avatar, émoji, thème)
+```
+
+### Contexte et état global
+
+- **ColorThemeContext** : 14 thèmes couleur, injecte les variables CSS HSL dynamiquement, persiste dans localStorage + API (via `preferences`)
+- **TanStack React Query** : tous les appels API passent par React Query (cache, refetch, loading/error states)
+- **Axios** : instance avec interceptor JWT (refresh automatique)
+
+### Composants clés
+
+- **AppLayout** : layout authentifié avec sidebar (Dashboard, Entretiens, Campagnes, Modèles, Utilisateurs) + topbar (notifications, profil, logout)
+- **ThemeSync** : synchronise le thème depuis les préférences utilisateur au premier chargement
+- **LoadingScreen / ErrorScreen** : états de chargement et d'erreur globaux
+- **ConfirmDialog** : boîte de confirmation modale (natif `<dialog>`)
+
+### Thèmes couleur
+
+14 thèmes disponibles, chacun décliné en mode clair et sombre :
+ISB, Blue, Green, Purple, Red, Teal, Pink, Slate, Midnight, Charcoal, Forest, Plum, Navy, Wine
+
+Le thème actif est :
+1. Appliqué immédiatement via `localStorage` (au changement dans le profil)
+2. Sauvegardé en base via `PATCH /auth/me/` (dans le JSON `preferences`)
+3. Restauré depuis l'API si `localStorage` est vide (nouvel appareil)
+
+---
+
+## Mode d'emploi
+
+### Développement
+
+```bash
+docker compose up -d                          # Lancer tous les services
+docker compose logs -f backend                # Voir les logs backend
+docker compose exec backend python manage.py migrate   # Migrations
+docker compose exec backend python manage.py createsuperuser  # Admin
+docker compose restart backend                # Redémarrer un service
+```
+
+Le premier utilisateur créé (via le login dev) reçoit automatiquement le rôle RH.
+
+### Connexion OIDC / Microsoft Entra ID
+
+1. Remplir les variables `OIDC_*` dans `.env` (voir [doc/guides/ENTRA_ID_SETUP.md](guides/ENTRA_ID_SETUP.md))
+2. Les variables actuelles pointent sur un tenant Azure actif
+3. En dev, utiliser le login par email sur `/login` (pas besoin d'Entra ID)
+
+### Import CSV utilisateurs
+
+Format attendu (headers) :
+```
+email,first_name,last_name,role,manager_email,site_name,service_name,position_name,matricule,type_contrat,statut,coefficient,salaire_brut,forfait_jour,tickets_restaurant,cadre,agence_interim,telephone,sexe,date_naissance,hire_date,date_sortie
+```
+
+- `role` : admin / rh / manager / employee / stagiaire / alternant
+- `type_contrat` : cdi / cdd / interim / alternance / stage
+- `statut` : actif / inactif / sortie
+- `forfait_jour`, `tickets_restaurant`, `cadre` : 0 ou 1
+- `manager_email` : doit correspondre à un utilisateur existant (email insensible à la casse)
+
+### Entretiens
+
+1. Créer un **modèle** (template) avec des sections et questions
+2. Créer une **campagne** (ou un entretien individuel)
+3. Le **manager** remplit l'entretien avec le collaborateur
+4. Signature : l'employé coche "J'ai pris connaissance", le manager finalise
+
+Types d'entretiens supportés :
+- **Annual** : entretien annuel d'évaluation
+- **Professional** : entretien professionnel (évolution de carrière)
+- **Bilan** : bilan de compétences / mi-carrière
+- **Forfait** : entretien forfait-jour (convention SYNTEC)
+- **Fin carrière** : entretien de fin de carrière
+
+### Notifications
+
+Les notifications sont créées automatiquement quand :
+- Un entretien est créé pour un employé → notifie son manager
+- Un entretien est complété → notifie le manager
+- Un entretien est signé → notifie le manager
+- Un entretien approche de sa date d'échéance → notifie le manager (commande `check_upcoming`)
+
+### Commandes utiles
+
+```bash
+# Créer les notifications d'échéance
+docker compose exec backend python manage.py check_upcoming
+
+# Ouvrir une session shell Django
+docker compose exec backend python manage.py shell
+
+# Voir les logs d'un service
+docker compose logs -f backend
+docker compose logs -f frontend
+
+# Redémarrer tous les services
+docker compose restart
+
+# Rebuild après modification des dépendances
+docker compose up -d --build backend
+```
