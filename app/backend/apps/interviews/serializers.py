@@ -33,7 +33,7 @@ class InterviewSerializer(serializers.ModelSerializer):
     template_name = serializers.CharField(source="template.name", read_only=True, default="")
     employee_manager_name = serializers.SerializerMethodField()
     employee_manager_id = serializers.SerializerMethodField()
-    document = serializers.SerializerMethodField()
+    document_url = serializers.SerializerMethodField()
     previous_content = serializers.SerializerMethodField()
 
     class Meta:
@@ -44,7 +44,7 @@ class InterviewSerializer(serializers.ModelSerializer):
             "campaign", "template", "template_name",
             "employee_manager_name", "employee_manager_id",
             "type", "status", "due_date", "content",
-            "document",
+            "document_url",
             "previous_content",
             "created_at", "updated_at",
         ]
@@ -60,7 +60,7 @@ class InterviewSerializer(serializers.ModelSerializer):
             return obj.employee.manager.id
         return None
 
-    def get_document(self, obj):
+    def get_document_url(self, obj):
         if obj.document:
             return f"/media/{obj.document.name}"
         return None

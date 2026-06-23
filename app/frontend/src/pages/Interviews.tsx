@@ -46,18 +46,17 @@ export default function Interviews() {
   const [scope, setScope] = useState("");
   const [showHistory, setShowHistory] = useState(false);
   const [deleteId, setDeleteId] = useState<number | null>(null);
-  const [uploadTargetId, setUploadTargetId] = useState<number | null>(null);
+  const uploadTargetRef = useRef<number | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
-    const id = uploadTargetId;
+    const id = uploadTargetRef.current;
     if (!file || !id) return;
     const form = new FormData();
     form.append("document", file);
-    await api.patch(`/interviews/${id}/`, form);
+    await api.post(`/interviews/${id}/upload_document/`, form);
     queryClient.invalidateQueries({ queryKey: ["interviews"] });
-    setUploadTargetId(null);
     e.target.value = "";
   };
 
@@ -197,9 +196,9 @@ export default function Interviews() {
                           </Button>
                           {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
                             <>
-                              {iv.document ? (
+                              {iv.document_url ? (
                                 <>
-                                  <a href={iv.document} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
+                                  <a href={iv.document_url} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()}>
                                     <Button variant="ghost" size="sm">
                                       <Upload className="mr-1 h-4 w-4" />
                                       Document
@@ -210,7 +209,7 @@ export default function Interviews() {
                                   </Button>
                                 </>
                               ) : (
-                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setUploadTargetId(iv.id); fileInputRef.current?.click(); }}>
+                                <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); uploadTargetRef.current = iv.id; fileInputRef.current?.click(); }}>
                                   <Upload className="mr-1 h-4 w-4" />
                                   Importer
                                 </Button>

@@ -217,6 +217,17 @@ class InterviewViewSet(viewsets.ModelViewSet):
         return response
 
     @action(detail=True, methods=["post"])
+    def upload_document(self, request, pk=None):
+        interview = self.get_object()
+        file = request.FILES.get("document")
+        if file:
+            if interview.document:
+                interview.document.delete()
+            interview.document = file
+            interview.save(update_fields=["document"])
+        return Response(self.get_serializer(interview).data)
+
+    @action(detail=True, methods=["post"])
     def remove_document(self, request, pk=None):
         interview = self.get_object()
         if interview.document:
