@@ -157,9 +157,11 @@ class InterviewViewSet(viewsets.ModelViewSet):
     def print(self, request, pk=None):
         interview = self.get_object()
         sections = interview.content.get("sections", [])
+        history = Interview.objects.filter(employee=interview.employee).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at")[:6]
         return render(request, "interviews/print.html", {
             "interview": interview,
             "sections": sections,
+            "history": history,
         })
 
     @action(detail=True, methods=["get"])
@@ -167,9 +169,11 @@ class InterviewViewSet(viewsets.ModelViewSet):
         from weasyprint import HTML
         interview = self.get_object()
         sections = interview.content.get("sections", [])
+        history = Interview.objects.filter(employee=interview.employee).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at")[:6]
         html = render_to_string("interviews/print.html", {
             "interview": interview,
             "sections": sections,
+            "history": history,
         })
         pdf = HTML(string=html).write_pdf()
         emp = interview.employee

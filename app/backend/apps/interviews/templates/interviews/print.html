@@ -101,6 +101,28 @@
   </div>
 </div>
 
+{% if history %}
+<div class="section">
+  <h2>Historique des entretiens</h2>
+  <table style="width:100%; border-collapse: collapse; font-size: 9pt;">
+    <tr style="border-bottom: 1pt solid #ccc;">
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Date</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Type</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Statut</th>
+      <th style="text-align:left; padding:4pt 6pt; color:#555; font-size:8pt; text-transform:uppercase;">Manager</th>
+    </tr>
+    {% for h in history %}
+    <tr style="border-bottom: 0.5pt solid #eee;">
+      <td style="padding:4pt 6pt;">{{ h.created_at|date:"d/m/Y" }}</td>
+      <td style="padding:4pt 6pt;">{{ h.get_type_display }}</td>
+      <td style="padding:4pt 6pt;">{{ h.get_status_display }}</td>
+      <td style="padding:4pt 6pt;">{{ h.manager.get_full_name|default:h.manager.email }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
 <div class="section">
   <h2>Questions / Réponses</h2>
   {% for section in sections %}
