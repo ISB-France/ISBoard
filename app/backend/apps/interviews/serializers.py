@@ -43,6 +43,7 @@ class InterviewSerializer(serializers.ModelSerializer):
             "campaign", "template", "template_name",
             "employee_manager_name", "employee_manager_id",
             "type", "status", "due_date", "content",
+            "document",
             "previous_content",
             "created_at", "updated_at",
         ]

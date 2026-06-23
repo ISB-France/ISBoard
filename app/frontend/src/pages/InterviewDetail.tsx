@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
-import { Save, CheckCircle2, Download, PenSquare, Plus, X } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Save, CheckCircle2, Download, PenSquare, Plus, X, Upload, FileText } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Badge } from "../components/ui/badge";
@@ -35,6 +35,8 @@ const statusLabel: Record<string, string> = {
 export default function InterviewDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const fileRef = useRef<HTMLInputElement>(null);
   const [interview, setInterview] = useState<Interview | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [saving, setSaving] = useState(false);
@@ -158,13 +160,19 @@ export default function InterviewDetail() {
     }
   };
 
+  const handleDocumentUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const form = new FormData();
+    form.append("document", file);
+    const res = await api.patch(`/interviews/${id}/`, form);
+    setInterview(res.data);
+    queryClient.invalidateQueries({ queryKey: ["interviews"] });
+    e.target.value = "";
+  };
+
   const downloadPdf = useCallback(async () => {
     const res = await api.get(`/interviews/${id}/pdf/`, { responseType: "blob" });
-    const disposition = res.headers["content-disposition"];
-    const match = disposition && disposition.match(/filename="(.+)"/);
-    const filename = match ? match[1] : `entretien_${id}.pdf`;
-    const url = URL.createObjectURL(res.data);
-    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
     a.click();
@@ -238,6 +246,21 @@ export default function InterviewDetail() {
               <Download className="mr-1 h-4 w-4" />
               Télécharger PDF
             </Button>
+          )}
+          {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
+            <>
+              <input ref={fileRef} type="file" accept=".pdf" className="hidden" onChange={handleDocumentUpload} />
+              <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()}>
+                <Upload className="mr-1 h-4 w-4" />
+                Importer PDF
+              </Button>
+              {interview.document && (
+                <Button variant="outline" size="sm" onClick={() => window.open(interview.document!, "_blank")}>
+                  <FileText className="mr-1 h-4 w-4" />
+                  Voir le document
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>

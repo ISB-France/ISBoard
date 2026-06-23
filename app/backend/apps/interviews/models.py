@@ -80,6 +80,7 @@ class Interview(models.Model):
     status = models.CharField(max_length=20, choices=Status.choices, default=Status.DRAFT)
     due_date = models.DateField()
     content = models.JSONField(default=dict, blank=True)
+    document = models.FileField(upload_to="interview_docs/", null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
