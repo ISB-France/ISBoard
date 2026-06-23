@@ -13,7 +13,7 @@ import type { User } from "../types";
 const EMOJIS = [
   "🌲", "🌳", "🪵", "🪚", "🪓", "🔨",
   "👨‍🌾", "👩‍🌾", "👨‍🔧", "👩‍🔧", "👨‍🎨", "👩‍🎨",
-  "🏡", "🔥", "🌿", "🍃", "🌰", "🍄",
+  "🏡", "🍂", "🌿", "🍃", "🌰", "🍄",
   "🌸", "🌻", "🍀", "🌱", "🌹", "🪴",
 ];
 
@@ -176,6 +176,25 @@ export default function Profile() {
                 </Button>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className="mt-6">
+          <CardHeader>
+            <h2 className="font-display text-lg font-semibold">Préférences</h2>
+            <p className="text-xs text-muted-foreground">Ces préférences sont utilisées pour personnaliser votre expérience.</p>
+          </CardHeader>
+          <CardContent>
+            <textarea
+              value={user.preferences || ""}
+              onChange={async (e) => {
+                await api.patch("/auth/me/", { preferences: e.target.value });
+                queryClient.invalidateQueries({ queryKey: ["me"] });
+              }}
+              rows={6}
+              className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm"
+              placeholder="Décrivez vos préférences..."
+            />
           </CardContent>
         </Card>
       </div>

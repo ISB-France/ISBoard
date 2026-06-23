@@ -46,6 +46,7 @@ class UserSerializer(serializers.ModelSerializer):
             "site", "site_name",
             "manager", "agence_interim",
             "icon",
+            "preferences",
         ]
 
     def create(self, validated_data):
@@ -74,6 +75,7 @@ class UserMeSerializer(serializers.ModelSerializer):
             "site", "site_name",
             "manager", "manager_name", "agence_interim",
             "icon",
+            "preferences",
         ]
 
     def get_photo(self, obj):
