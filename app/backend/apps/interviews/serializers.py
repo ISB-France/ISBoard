@@ -33,6 +33,7 @@ class InterviewSerializer(serializers.ModelSerializer):
     template_name = serializers.CharField(source="template.name", read_only=True, default="")
     employee_manager_name = serializers.SerializerMethodField()
     employee_manager_id = serializers.SerializerMethodField()
+    previous_content = serializers.SerializerMethodField()
 
     class Meta:
         model = Interview
@@ -42,6 +43,7 @@ class InterviewSerializer(serializers.ModelSerializer):
             "campaign", "template", "template_name",
             "employee_manager_name", "employee_manager_id",
             "type", "status", "due_date", "content",
+            "previous_content",
             "created_at", "updated_at",
         ]
         read_only_fields = ["manager", "created_at", "updated_at"]
@@ -55,3 +57,14 @@ class InterviewSerializer(serializers.ModelSerializer):
         if obj.employee.manager:
             return obj.employee.manager.id
         return None
+
+    def get_previous_content(self, obj):
+        prev = (
+            Interview.objects.filter(employee=obj.employee, type=obj.type, status__in=("completed", "signed"))
+            .exclude(pk=obj.pk)
+            .order_by("-updated_at")
+            .first()
+        )
+        if prev:
+            return prev.content.get("sections", [])
+        return []

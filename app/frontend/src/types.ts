@@ -102,6 +102,7 @@ export interface Interview {
   status: "draft" | "in_progress" | "completed" | "signed" | "cancelled";
   due_date: string;
   content: Record<string, unknown>;
+  previous_content: Section[];
   created_at: string;
   updated_at: string;
 }

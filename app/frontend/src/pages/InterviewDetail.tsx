@@ -105,6 +105,13 @@ export default function InterviewDetail() {
   const canEdit = currentUser?.role === "admin" || currentUser?.role === "rh" || interview.manager === currentUser?.id || (isOwn && hasNoManager) || (currentUser?.role === "manager" && !isOwn);
   const isReadOnly = !canEdit || interview.status === "completed" || interview.status === "signed" || interview.status === "cancelled";
 
+  const prevAnswers = new Map<string, string | number | null>();
+  for (const section of interview.previous_content || []) {
+    for (const q of section.questions) {
+      prevAnswers.set(q.id, q.answer);
+    }
+  }
+
 
   return (
     <AppLayout>
@@ -225,18 +232,28 @@ export default function InterviewDetail() {
             <CardTitle>{section.title}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-5">
-            {section.questions.map((q, qIdx) => (
+            {section.questions.map((q, qIdx) => {
+              const prev = prevAnswers.get(q.id);
+              return (
               <div key={q.id}>
                 <label className="mb-1.5 block text-sm font-medium">{q.label}</label>
                 {q.type === "textarea" && (
+                  <>
                   <Textarea
                     rows={4}
                     value={typeof q.answer === "string" ? q.answer : ""}
                     onChange={(e) => updateAnswer(sIdx, qIdx, e.target.value)}
                     disabled={isReadOnly}
                   />
+                  {prev !== undefined && prev !== null && (
+                    <p className="mt-1 text-xs text-muted-foreground/60 italic">
+                      Réponse précédente : {String(prev)}
+                    </p>
+                  )}
+                  </>
                 )}
                 {q.type === "rating" && (
+                  <>
                   <div className="flex gap-1.5">
                     {[1, 2, 3, 4, 5].map((n) => (
                       <button
@@ -253,9 +270,16 @@ export default function InterviewDetail() {
                       </button>
                     ))}
                   </div>
+                  {prev !== undefined && prev !== null && (
+                    <p className="mt-1 text-xs text-muted-foreground/60 italic">
+                      Note précédente : {String(prev)}/5
+                    </p>
+                  )}
+                  </>
                 )}
               </div>
-            ))}
+              );
+            })}
           </CardContent>
         </Card>
       ))}
