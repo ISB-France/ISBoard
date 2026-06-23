@@ -22,6 +22,13 @@ const downloadPdf = async (id: number) => {
   URL.revokeObjectURL(url);
 };
 
+const openPrint = async (id: number) => {
+  const res = await api.get(`/interviews/${id}/print/`, { responseType: "blob" });
+  const url = URL.createObjectURL(res.data);
+  const w = window.open(url, "_blank");
+  if (w) w.onload = () => URL.revokeObjectURL(url);
+};
+
 const statusLabel: Record<string, string> = {
   draft: "Brouillon",
   in_progress: "En cours",
@@ -164,7 +171,7 @@ export default function Interviews() {
                     <div className="flex items-center gap-1">
                       {showHistory ? (
                         <>
-                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); window.open(`/api/interviews/${iv.id}/print/`, "_blank"); }}>
+                          <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); openPrint(iv.id); }}>
                             Imprimer
                           </Button>
                           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); downloadPdf(iv.id); }}>
