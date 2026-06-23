@@ -50,7 +50,7 @@ export default function Profile() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await api.put("/auth/me/", { icon });
+      await api.patch("/auth/me/", { icon });
       queryClient.invalidateQueries({ queryKey: ["me"] });
       setEditing(false);
     } catch {
