@@ -91,7 +91,7 @@ export default function Profile() {
                 ) : user.photo ? (
                   <img src={user.photo} alt="" className="h-full w-full rounded-full object-cover" />
                 ) : (
-                  <AvatarFallback className="text-xl font-semibold" style={{ backgroundColor: '#FFDD00', color: '#3B2800' }}>
+                  <AvatarFallback className="text-xl font-semibold bg-primary-foreground text-primary">
                     {initials}
                   </AvatarFallback>
                 )}
@@ -100,7 +100,7 @@ export default function Profile() {
                 <>
                   <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarUpload} />
                   <button
-                    className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-isb-yellow text-isb-brown shadow hover:opacity-80 disabled:opacity-50"
+                    className="absolute -bottom-1 -right-1 flex h-7 w-7 items-center justify-center rounded-full bg-primary-foreground text-primary shadow hover:opacity-80 disabled:opacity-50"
                     onClick={() => fileRef.current?.click()}
                     disabled={uploading}
                     title="Changer l'avatar"
@@ -122,7 +122,7 @@ export default function Profile() {
                         <button
                           key={e}
                           type="button"
-                          className={`flex h-8 w-8 items-center justify-center rounded text-lg hover:bg-muted ${icon === e ? "ring-2 ring-isb-yellow" : ""}`}
+                          className={`flex h-8 w-8 items-center justify-center rounded text-lg hover:bg-muted ${icon === e ? "ring-2 ring-primary-foreground" : ""}`}
                           onClick={() => { setIcon(e); setShowIcons(false); }}
                         >
                           {e}

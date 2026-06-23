@@ -22,7 +22,7 @@ export default function Dashboard() {
 
   const cards = [
     { label: "Total entretiens", value: stats?.total ?? 0, icon: FileText, color: "" },
-    { label: "Brouillons", value: statusMap["draft"] ?? 0, icon: Clock, color: "text-isb-sand-mid" },
+    { label: "Brouillons", value: statusMap["draft"] ?? 0, icon: Clock, color: "text-muted-foreground" },
     { label: "En cours", value: statusMap["in_progress"] ?? 0, icon: CalendarClock, color: "text-blue-500" },
     { label: "En retard", value: stats?.overdue ?? 0, icon: AlertTriangle, color: "text-isb-coral" },
     { label: "Terminés", value: statusMap["completed"] ?? 0, icon: CheckCircle2, color: "text-green-600" },
@@ -38,7 +38,7 @@ export default function Dashboard() {
           <Card key={card.label}>
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
-                <card.icon className={`h-8 w-8 ${card.color || "text-isb-brown"}`} />
+                <card.icon className={`h-8 w-8 ${card.color || "text-primary"}`} />
               </div>
               <p className="mt-2 font-display text-2xl font-bold">{card.value}</p>
               <p className="text-xs text-muted-foreground">{card.label}</p>

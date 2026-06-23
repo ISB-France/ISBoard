@@ -194,7 +194,7 @@ export default function Users() {
                     <td className="px-6 py-3">
                       <div className="flex items-center gap-3">
                         <Avatar className="h-8 w-8">
-                          <AvatarFallback className="bg-isb-yellow text-isb-brown text-xs font-semibold">
+                          <AvatarFallback className="bg-primary-foreground text-primary text-xs font-semibold">
                             {(u.first_name?.[0] ?? "") + (u.last_name?.[0] ?? "") || u.email[0].toUpperCase()}
                           </AvatarFallback>
                         </Avatar>

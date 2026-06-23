@@ -79,13 +79,13 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="flex min-h-screen bg-[#FDFAF5]">
       <aside
         className={cn(
-          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-isb-brown text-white transition-transform",
+          "fixed inset-y-0 left-0 z-50 flex w-64 flex-col bg-primary text-white transition-transform",
           sidebarOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0",
         )}
       >
         <div className="flex items-center gap-3 px-6 py-6">
           <img src="/logo-white.png" alt="ISB France" className="h-8 w-auto" />
-          <span className="font-display text-lg font-semibold text-isb-yellow">ISBoard</span>
+          <span className="font-display text-lg font-semibold text-primary-foreground">ISBoard</span>
         </div>
         <nav className="flex-1 space-y-1 px-3">
           {navItems
@@ -100,7 +100,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   cn(
                     "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                     isActive
-                      ? "bg-isb-yellow/20 text-isb-yellow"
+                      ? "bg-primary-foreground/20 text-primary-foreground"
                       : "text-white/70 hover:bg-white/10 hover:text-white",
                   )
                 }
@@ -149,7 +149,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <div className="flex items-center justify-between border-b border-border px-4 py-2">
                   <span className="text-sm font-semibold">Notifications</span>
                   {unreadCount > 0 && (
-                    <button className="text-xs text-isb-yellow hover:underline" onClick={handleMarkAllRead}>
+                    <button className="text-xs text-primary-foreground hover:underline" onClick={handleMarkAllRead}>
                       Tout marquer lu
                     </button>
                   )}
@@ -163,7 +163,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                   {notifications?.map((n) => (
                     <button
                       key={n.id}
-                      className={`w-full px-4 py-3 text-left text-sm transition-colors hover:bg-muted/50 ${!n.is_read ? "bg-isb-yellow/5 font-medium" : ""}`}
+                      className={`w-full px-4 py-3 text-left text-sm transition-colors hover:bg-muted/50 ${!n.is_read ? "bg-primary-foreground/5 font-medium" : ""}`}
                       onClick={() => handleNotifClick(n)}
                     >
                       <div className={!n.is_read ? "text-foreground" : "text-muted-foreground"}>
@@ -189,7 +189,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               ) : user?.photo ? (
                 <img src={user.photo} alt="" className="h-full w-full rounded-full object-cover" />
               ) : (
-                <AvatarFallback className="text-xs font-semibold" style={{ backgroundColor: '#FFDD00', color: '#3B2800' }}>
+                <AvatarFallback className="text-xs font-semibold bg-primary-foreground text-primary">
                   {initials}
                 </AvatarFallback>
               )}

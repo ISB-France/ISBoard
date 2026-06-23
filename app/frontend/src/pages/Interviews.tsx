@@ -116,13 +116,13 @@ export default function Interviews() {
         </select>
         <div className="inline-flex rounded-md border border-border">
           <button
-            className={`px-4 py-2 text-sm font-medium transition-colors ${!showHistory ? "bg-isb-yellow text-isb-brown" : "bg-white text-muted-foreground hover:bg-muted/50"}`}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${!showHistory ? "bg-primary-foreground text-primary" : "bg-white text-muted-foreground hover:bg-muted/50"}`}
             onClick={() => setShowHistory(false)}
           >
             En cours
           </button>
           <button
-            className={`px-4 py-2 text-sm font-medium transition-colors ${showHistory ? "bg-isb-yellow text-isb-brown" : "bg-white text-muted-foreground hover:bg-muted/50"}`}
+            className={`px-4 py-2 text-sm font-medium transition-colors ${showHistory ? "bg-primary-foreground text-primary" : "bg-white text-muted-foreground hover:bg-muted/50"}`}
             onClick={() => setShowHistory(true)}
           >
             Historique

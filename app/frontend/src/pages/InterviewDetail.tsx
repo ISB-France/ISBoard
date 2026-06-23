@@ -301,8 +301,8 @@ export default function InterviewDetail() {
                         onClick={() => !isReadOnly && updateAnswer(sIdx, qIdx, n)}
                         className={`flex h-10 w-10 items-center justify-center rounded-md border text-sm font-semibold transition-colors ${
                           q.answer !== null && n <= (q.answer as number)
-                            ? "border-isb-yellow bg-isb-yellow text-isb-brown"
-                            : "border-border text-muted-foreground hover:border-isb-sand-mid"
+                            ? "border-primary-foreground bg-primary-foreground text-primary"
+                            : "border-border text-muted-foreground hover:border-border"
                         } ${isReadOnly ? "cursor-default" : "cursor-pointer"}`}
                       >
                         {n}
@@ -367,8 +367,8 @@ export default function InterviewDetail() {
                                           onClick={() => !isReadOnly && updateTableCell(sIdx, qIdx, rowIdx, colIdx, n)}
                                           className={`flex h-8 w-8 items-center justify-center rounded-md border text-xs font-semibold transition-colors ${
                                             row[colIdx] !== null && row[colIdx] !== undefined && n <= (row[colIdx] as number)
-                                              ? "border-isb-yellow bg-isb-yellow text-isb-brown"
-                                              : "border-border text-muted-foreground hover:border-isb-sand-mid"
+                                              ? "border-primary-foreground bg-primary-foreground text-primary"
+                                              : "border-border text-muted-foreground hover:border-border"
                                           } ${isReadOnly ? "cursor-default" : "cursor-pointer"}`}
                                         >
                                           {n}
