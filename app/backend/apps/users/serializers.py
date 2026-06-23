@@ -47,6 +47,10 @@ class UserSerializer(serializers.ModelSerializer):
             "manager", "agence_interim",
         ]
 
+    def create(self, validated_data):
+        validated_data["username"] = validated_data["email"]
+        return super().create(validated_data)
+
 
 class UserMeSerializer(serializers.ModelSerializer):
     manager_name = serializers.SerializerMethodField()
