@@ -8,6 +8,7 @@ import { Badge } from "../components/ui/badge";
 import { Textarea } from "../components/ui/textarea";
 import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
+import { Toast, useToast } from "../components/Toast";
 import api from "../api";
 import type { Interview, User, TableColumn } from "../types";
 
@@ -38,6 +39,7 @@ export default function InterviewDetail() {
   const [interview, setInterview] = useState<Interview | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [saving, setSaving] = useState(false);
+  const { toast, show, setToast } = useToast();
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["me"],
@@ -113,9 +115,10 @@ export default function InterviewDetail() {
       const res = await api.patch(`/interviews/${id}/`, payload);
       setInterview(res.data);
       setSections(res.data.content?.sections || []);
-      navigate("/interviews");
+      show(newStatus === "completed" ? "Entretien finalisé" : "Entretien enregistré");
+      setTimeout(() => navigate("/interviews"), 800);
     } catch {
-      alert("Erreur lors de l'enregistrement");
+      show("Erreur lors de l'enregistrement", "error");
     } finally {
       setSaving(false);
     }
@@ -410,6 +413,7 @@ export default function InterviewDetail() {
         </Card>
       ))}
 
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </AppLayout>
   );
 }
