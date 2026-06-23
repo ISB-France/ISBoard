@@ -71,6 +71,7 @@
   <table class="info-grid">
     <tr><td class="label">Date d'entretien :</td><td class="value">{% now "d/m/Y" %}</td></tr>
     <tr><td class="label">Nature de l'entretien :</td><td class="value">{{ interview.get_type_display }}</td></tr>
+    <tr><td class="label">Lieu :</td><td class="value">{{ interview.content.lieu|default:"—" }}</td></tr>
   </table>
 
   <div class="two-col">
@@ -94,6 +95,7 @@
         <tr><td class="label">Type contrat</td><td class="value">{{ interview.employee.get_type_contrat_display|default:"—" }}</td></tr>
         <tr><td class="label">Statut</td><td class="value">{{ interview.employee.get_statut_display|default:"—" }}</td></tr>
         <tr><td class="label">Poste / Fonction</td><td class="value">{{ interview.employee.position.name|default:"—" }}</td></tr>
+        <tr><td class="label">Site</td><td class="value">{{ interview.employee.site.name|default:"—" }}</td></tr>
         <tr><td class="label">Coefficient</td><td class="value">{{ interview.employee.coefficient|default:"—" }}</td></tr>
         <tr><td class="label">Ancienneté</td><td class="value">{% if interview.employee.hire_date %}{{ interview.employee.hire_date|timesince }}{% else %}—{% endif %}</td></tr>
       </table>

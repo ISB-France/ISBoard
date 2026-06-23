@@ -37,6 +37,7 @@ export default function InterviewDetail() {
   const navigate = useNavigate();
   const [interview, setInterview] = useState<Interview | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
+  const [location, setLocation] = useState("");
   const [saving, setSaving] = useState(false);
 
   const { data: currentUser } = useQuery<User>({
@@ -48,6 +49,7 @@ export default function InterviewDetail() {
     if (!id) return;
     api.get(`/interviews/${id}/`).then((r) => {
       setInterview(r.data);
+      setLocation(r.data.content?.lieu || "");
       const current: Section[] = r.data.content?.sections || [];
       const previous: Section[] = r.data.previous_content || [];
       if (previous.length > 0) {
@@ -139,7 +141,7 @@ export default function InterviewDetail() {
     if (!interview) return;
     setSaving(true);
     try {
-      const payload: Record<string, unknown> = { content: { ...interview.content, sections } };
+      const payload: Record<string, unknown> = { content: { ...interview.content, sections, lieu: location } };
       if (newStatus) {
         payload.status = newStatus;
       } else if (interview.status === "draft") {
@@ -254,6 +256,20 @@ export default function InterviewDetail() {
                 {{ annual: "Entretien d'évaluation", professional: "Entretien professionnel", bilan: "Entretien de bilan", forfait: "Entretien forfait jours et charges", fin_carriere: "Entretien de fin de carrière" }[interview.type]}
               </p>
             </div>
+            <div>
+              <span className="text-xs font-semibold uppercase text-muted-foreground">Lieu</span>
+              {isReadOnly ? (
+                <p className="text-sm font-medium">{location || "—"}</p>
+              ) : (
+                <input
+                  type="text"
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="mt-0.5 h-8 w-full rounded-md border border-border bg-white px-2 text-sm"
+                  placeholder="Saisir le lieu..."
+                />
+              )}
+            </div>
           </div>
           <div className="grid grid-cols-2 gap-6">
             <div>
@@ -285,6 +301,7 @@ export default function InterviewDetail() {
                     {{ actif: "Actif", inactif: "Inactif", sortie: "Sortie" }[interview.employee_detail?.statut || ""] || "-"}
                   </td></tr>
                   <tr><td className="py-1 text-muted-foreground">Poste</td><td className="py-1 pl-4">{interview.employee_detail?.position_name || "-"}</td></tr>
+                  <tr><td className="py-1 text-muted-foreground">Site</td><td className="py-1 pl-4">{interview.employee_detail?.site_name || "-"}</td></tr>
                   <tr><td className="py-1 text-muted-foreground">Coefficient</td><td className="py-1 pl-4">{interview.employee_detail?.coefficient || "-"}</td></tr>
                   <tr><td className="py-1 text-muted-foreground">Ancienneté</td><td className="py-1 pl-4">{interview.employee_detail?.hire_date ? `${Math.floor((Date.now() - new Date(interview.employee_detail.hire_date).getTime()) / (365.25 * 24 * 60 * 60 * 1000))} ans` : "-"}</td></tr>
                 </tbody>
