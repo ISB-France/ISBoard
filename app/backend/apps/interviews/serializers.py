@@ -33,6 +33,7 @@ class InterviewSerializer(serializers.ModelSerializer):
     template_name = serializers.CharField(source="template.name", read_only=True, default="")
     employee_manager_name = serializers.SerializerMethodField()
     employee_manager_id = serializers.SerializerMethodField()
+    document = serializers.SerializerMethodField()
     previous_content = serializers.SerializerMethodField()
 
     class Meta:
@@ -57,6 +58,11 @@ class InterviewSerializer(serializers.ModelSerializer):
     def get_employee_manager_id(self, obj):
         if obj.employee.manager:
             return obj.employee.manager.id
+        return None
+
+    def get_document(self, obj):
+        if obj.document:
+            return f"/media/{obj.document.name}"
         return None
 
     def get_previous_content(self, obj):
