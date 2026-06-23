@@ -65,18 +65,23 @@ export default function InterviewDetail() {
   const handleSave = async (newStatus?: string) => {
     if (!interview) return;
     setSaving(true);
-    const payload: Record<string, unknown> = { content: { ...interview.content, sections } };
-    if (newStatus) {
-      payload.status = newStatus;
-    } else if (interview.status === "draft") {
-      payload.status = "in_progress";
-    }
-    const res = await api.patch(`/interviews/${id}/`, payload);
-    setInterview(res.data);
-    setSections(res.data.content?.sections || []);
-    setSaving(false);
-    if (newStatus === "completed") {
-      navigate("/interviews");
+    try {
+      const payload: Record<string, unknown> = { content: { ...interview.content, sections } };
+      if (newStatus) {
+        payload.status = newStatus;
+      } else if (interview.status === "draft") {
+        payload.status = "in_progress";
+      }
+      const res = await api.patch(`/interviews/${id}/`, payload);
+      setInterview(res.data);
+      setSections(res.data.content?.sections || []);
+      if (newStatus === "completed") {
+        navigate("/interviews");
+      }
+    } catch {
+      alert("Erreur lors de l'enregistrement");
+    } finally {
+      setSaving(false);
     }
   };
 

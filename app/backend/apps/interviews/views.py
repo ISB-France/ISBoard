@@ -57,12 +57,11 @@ class InterviewViewSet(viewsets.ModelViewSet):
     ordering_fields = ["due_date", "created_at", "updated_at", "status"]
     ordering = ["-due_date"]
 
-    def retrieve(self, request, *args, **kwargs):
+    def get_object(self):
         from django.shortcuts import get_object_or_404
-        interview = get_object_or_404(Interview.objects.select_related("employee", "manager", "template", "campaign"), pk=kwargs["pk"])
-        self.check_object_permissions(request, interview)
-        serializer = self.get_serializer(interview)
-        return Response(serializer.data)
+        obj = get_object_or_404(Interview.objects.select_related("employee", "manager", "template", "campaign"), pk=self.kwargs["pk"])
+        self.check_object_permissions(self.request, obj)
+        return obj
 
     def get_queryset(self):
         user = self.request.user
