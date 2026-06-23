@@ -333,12 +333,16 @@ export default function InterviewDetail() {
                       <tbody>
                         {(() => {
                           const rows: (string | number | null)[][] = Array.isArray(q.answer) ? (q.answer as (string | number | null)[][]) : [];
+                          const prevRows: (string | number | null)[][] = Array.isArray(prev) ? (prev as (string | number | null)[][]) : [];
                           return rows.map((row, rowIdx) => (
                             <tr key={rowIdx} className="border-b border-border last:border-0">
                               <td className="px-3 py-1.5 text-xs text-muted-foreground">{rowIdx + 1}</td>
-                              {q.columns!.map((col, colIdx) => (
-                                <td key={col.id} className="px-3 py-1.5">
+                              {q.columns!.map((col, colIdx) => {
+                                const prevCell = prevRows[rowIdx]?.[colIdx];
+                                return (
+                                <td key={col.id} className="px-3 py-1.5 align-top">
                                   {col.type === "textarea" ? (
+                                    <div>
                                     <Textarea
                                       rows={2}
                                       value={typeof row[colIdx] === "string" ? row[colIdx] : ""}
@@ -346,7 +350,14 @@ export default function InterviewDetail() {
                                       disabled={isReadOnly}
                                       className="min-w-[180px]"
                                     />
+                                    {prevCell !== undefined && prevCell !== null && (
+                                      <p className="mt-0.5 text-[10px] text-muted-foreground/50 italic leading-tight">
+                                        Préc. : {String(prevCell)}
+                                      </p>
+                                    )}
+                                    </div>
                                   ) : (
+                                    <div>
                                     <div className="flex gap-1">
                                       {[1, 2, 3, 4, 5].map((n) => (
                                         <button
@@ -363,9 +374,16 @@ export default function InterviewDetail() {
                                         </button>
                                       ))}
                                     </div>
+                                    {prevCell !== undefined && prevCell !== null && (
+                                      <p className="mt-0.5 text-[10px] text-muted-foreground/50 italic leading-tight">
+                                        Préc. : {String(prevCell)}/5
+                                      </p>
+                                    )}
+                                    </div>
                                   )}
                                 </td>
-                              ))}
+                                );
+                              })}
                               {!isReadOnly && (
                                 <td className="px-3 py-1.5">
                                   <Button type="button" size="icon" variant="ghost" onClick={() => removeTableRow(sIdx, qIdx, rowIdx)} className="h-7 w-7">
@@ -384,11 +402,6 @@ export default function InterviewDetail() {
                       <Plus className="h-3 w-3" />
                       Ajouter une ligne
                     </Button>
-                  )}
-                  {prev !== undefined && prev !== null && Array.isArray(prev) && (
-                    <p className="mt-1 text-xs text-muted-foreground/60 italic">
-                      {prev.length} ligne(s) dans le tableau précédent
-                    </p>
                   )}
                   </>
                 )}
