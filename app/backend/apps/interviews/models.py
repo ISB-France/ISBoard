@@ -22,7 +22,7 @@ class Campaign(models.Model):
 
 
 TYPE_CHOICES = [
-    ("annual", "Entretien annuel"),
+    ("annual", "Entretien d'évaluation"),
     ("professional", "Entretien professionnel"),
     ("bilan", "Entretien de bilan"),
     ("forfait", "Entretien forfait jours et charges"),
@@ -47,7 +47,7 @@ class InterviewTemplate(models.Model):
 
 class Interview(models.Model):
     class Type(models.TextChoices):
-        ANNUAL = "annual", "Entretien annuel"
+        ANNUAL = "annual", "Entretien d'évaluation"
         PROFESSIONAL = "professional", "Entretien professionnel"
         BILAN = "bilan", "Entretien de bilan"
         FORFAIT = "forfait", "Entretien forfait jours et charges"

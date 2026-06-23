@@ -64,7 +64,7 @@ export default function Dashboard() {
                 <tr key={t.type} className="border-b border-border last:border-0">
                   <td className="py-3">
                     <Badge variant={t.type as "annual" | "professional" | "bilan" | "forfait" | "fin_carriere"}>
-                      {{ annual: "Annuel", professional: "Professionnel", bilan: "Bilan", forfait: "Forfait jours", fin_carriere: "Fin de carrière" }[t.type] || t.type}
+                      {{ annual: "Évaluation", professional: "Professionnel", bilan: "Bilan", forfait: "Forfait jours", fin_carriere: "Fin de carrière" }[t.type] || t.type}
                     </Badge>
                   </td>
                   <td className="py-3 font-medium">{t.count}</td>

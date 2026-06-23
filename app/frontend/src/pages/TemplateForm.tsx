@@ -184,7 +184,7 @@ export default function TemplateForm() {
                 onChange={(e) => setType(e.target.value)}
                 className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm"
               >
-                <option value="annual">Entretien annuel</option>
+                <option value="annual">Entretien d'évaluation</option>
                 <option value="professional">Entretien professionnel</option>
                 <option value="bilan">Entretien de bilan</option>
                 <option value="forfait">Entretien forfait jours et charges</option>

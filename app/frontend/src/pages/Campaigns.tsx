@@ -13,7 +13,7 @@ import api from "../api";
 import type { Campaign, InterviewTemplate, User } from "../types";
 
 const typeLabel: Record<string, string> = {
-  annual: "Annuel",
+  annual: "Évaluation",
   professional: "Professionnel",
   bilan: "Bilan",
   forfait: "Forfait jours",

@@ -106,7 +106,7 @@ export default function InterviewForm() {
                 className="h-10 w-full rounded-md border border-border bg-white px-3 text-sm"
               >
                 <option value="">Sélectionner...</option>
-                <option value="annual">Annuel</option>
+                <option value="annual">Évaluation</option>
                 <option value="professional">Professionnel</option>
                 <option value="bilan">Bilan</option>
                 <option value="forfait">Forfait jours</option>

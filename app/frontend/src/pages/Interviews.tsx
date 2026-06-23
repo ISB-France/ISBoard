@@ -108,7 +108,7 @@ export default function Interviews() {
           className="h-10 rounded-md border border-border bg-white px-3 text-sm"
         >
           <option value="">Tous les types</option>
-          <option value="annual">Annuel</option>
+          <option value="annual">Évaluation</option>
           <option value="professional">Professionnel</option>
           <option value="bilan">Bilan</option>
           <option value="forfait">Forfait jours</option>
@@ -163,7 +163,7 @@ export default function Interviews() {
                   </td>
                   <td className="px-6 py-3">
                     <Badge variant={iv.type as "annual" | "professional" | "bilan" | "forfait" | "fin_carriere"}>
-                      {{ annual: "Annuel", professional: "Professionnel", bilan: "Bilan", forfait: "Forfait jours", fin_carriere: "Fin de carrière" }[iv.type]}
+                      {{ annual: "Évaluation", professional: "Professionnel", bilan: "Bilan", forfait: "Forfait jours", fin_carriere: "Fin de carrière" }[iv.type]}
                     </Badge>
                   </td>
                   <td className="px-6 py-3 text-sm text-muted-foreground">{iv.template_name || "-"}</td>

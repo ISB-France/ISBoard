@@ -186,7 +186,7 @@ export default function InterviewDetail() {
       <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-2xl font-bold">
-            {{ annual: "Entretien annuel", professional: "Entretien professionnel", bilan: "Entretien de bilan", forfait: "Entretien forfait jours et charges", fin_carriere: "Entretien de fin de carrière" }[interview.type]}
+            {{ annual: "Entretien d'évaluation", professional: "Entretien professionnel", bilan: "Entretien de bilan", forfait: "Entretien forfait jours et charges", fin_carriere: "Entretien de fin de carrière" }[interview.type]}
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {interview.employee_detail?.first_name} {interview.employee_detail?.last_name}
@@ -251,7 +251,7 @@ export default function InterviewDetail() {
             <div>
               <span className="text-xs font-semibold uppercase text-muted-foreground">Nature de l'entretien</span>
               <p className="text-sm font-medium">
-                {{ annual: "Entretien annuel", professional: "Entretien professionnel", bilan: "Entretien de bilan", forfait: "Entretien forfait jours et charges", fin_carriere: "Entretien de fin de carrière" }[interview.type]}
+                {{ annual: "Entretien d'évaluation", professional: "Entretien professionnel", bilan: "Entretien de bilan", forfait: "Entretien forfait jours et charges", fin_carriere: "Entretien de fin de carrière" }[interview.type]}
               </p>
             </div>
           </div>
