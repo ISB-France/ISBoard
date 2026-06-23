@@ -196,7 +196,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             </Avatar>
           </button>
         </header>
-        <main className="flex-1 p-6 lg:p-8">{children}</main>
+        <main className="flex-1 bg-background p-6 lg:p-8">{children}</main>
       </div>
     </div>
   );

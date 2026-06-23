@@ -51,7 +51,12 @@ function applyTheme(hue: number, dark: boolean) {
   root.style.setProperty("--muted-foreground", `${hue} ${satMutFg}% ${dark ? 60 : 48}%`);
   root.style.setProperty("--accent", `${hue} ${satAcc}% ${dark ? 20 : 88}%`);
   root.style.setProperty("--ring", dark ? `${hue} 60% 70%` : `${hue} 100% 12%`);
+  root.style.setProperty("--destructive", `0 80% 50%`);
+  root.style.setProperty("--destructive-foreground", `0 0% 100%`);
   root.classList.toggle("dark", dark);
+
+  document.body.style.backgroundColor = `hsl(${hue} ${satBg}% ${bgLight}%)`;
+  document.body.style.color = `hsl(${hue} ${satFg}% ${fgLight}%)`;
 }
 
 interface ThemeContextType {
