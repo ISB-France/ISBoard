@@ -1,9 +1,8 @@
 import { useState, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, Mail, Shield, Camera, Save, X } from "lucide-react";
+import { Shield, Camera, Save, X } from "lucide-react";
 import { Card, CardContent, CardHeader } from "../components/ui/card";
 import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
 import { Avatar, AvatarFallback } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import AppLayout from "../components/AppLayout";
@@ -25,8 +24,6 @@ export default function Profile() {
   const [showIcons, setShowIcons] = useState(false);
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
   const [icon, setIcon] = useState("");
 
   const { data: user, isLoading } = useQuery<User>({
@@ -40,8 +37,6 @@ export default function Profile() {
   const initials = `${user.first_name?.[0] ?? ""}${user.last_name?.[0] ?? ""}`.toUpperCase() || user.email[0].toUpperCase();
 
   const startEditing = () => {
-    setFirstName(user.first_name || "");
-    setLastName(user.last_name || "");
     setIcon(user.icon || "");
     setEditing(true);
     setShowIcons(false);
@@ -55,7 +50,7 @@ export default function Profile() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await api.put("/auth/me/", { first_name: firstName, last_name: lastName, icon });
+      await api.put("/auth/me/", { icon });
       queryClient.invalidateQueries({ queryKey: ["me"] });
       setEditing(false);
     } catch {
@@ -115,8 +110,6 @@ export default function Profile() {
             </div>
             {editing ? (
               <div className="w-full max-w-xs space-y-2">
-                <Input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Prénom" />
-                <Input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Nom" />
                 <div>
                   <Button type="button" variant="outline" size="sm" className="w-full gap-1" onClick={() => setShowIcons(!showIcons)}>
                     {icon ? `${icon} Changer d'icône` : "Choisir une icône"}
