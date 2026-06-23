@@ -75,7 +75,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
 
         elif user.role == "manager":
             if scope == "own":
-                qs = qs.filter(models.Q(employee=user) | models.Q(manager=user))
+                qs = qs.filter(employee=user)
             elif scope == "team":
                 from apps.users.views import get_subordinate_ids
                 ids = get_subordinate_ids(user.id)
@@ -88,7 +88,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
                 if subordinates:
                     qs = qs.filter(employee_id__in=subordinates)
                 else:
-                    qs = qs.filter(models.Q(employee=user) | models.Q(manager=user))
+                    qs = qs.filter(employee=user)
 
         elif user.role == "employee" and not user.manager:
             qs = qs.filter(employee=user)
