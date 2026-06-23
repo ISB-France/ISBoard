@@ -181,7 +181,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
     def print(self, request, pk=None):
         interview = self.get_object()
         sections = interview.content.get("sections", [])
-        history = Interview.objects.filter(employee=interview.employee).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at")[:6]
+        history = Interview.objects.filter(employee=interview.employee, status__in=("completed", "signed")).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at")[:6]
         career = Interview.objects.filter(
             employee=interview.employee,
             type="professional",
@@ -198,7 +198,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
         from weasyprint import HTML
         interview = self.get_object()
         sections = interview.content.get("sections", [])
-        history = Interview.objects.filter(employee=interview.employee).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at")[:6]
+        history = Interview.objects.filter(employee=interview.employee, status__in=("completed", "signed")).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at")[:6]
         career = Interview.objects.filter(
             employee=interview.employee,
             type="professional",
