@@ -17,6 +17,9 @@ const badgeVariants = cva(
         cancelled: "border-transparent bg-red-100 text-red-700",
         annual: "border-transparent bg-purple-100 text-purple-700",
         professional: "border-transparent bg-amber-100 text-amber-700",
+        bilan: "border-transparent bg-cyan-100 text-cyan-700",
+        forfait: "border-transparent bg-indigo-100 text-indigo-700",
+        fin_carriere: "border-transparent bg-rose-100 text-rose-700",
       },
     },
     defaultVariants: {
