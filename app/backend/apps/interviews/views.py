@@ -27,7 +27,7 @@ class InterviewPermission(permissions.BasePermission):
     def has_object_permission(self, request, view, obj):
         if request.user.role in RH_ROLES:
             return True
-        if view.action in ("retrieve",):
+        if view.action in ("retrieve", "print", "pdf"):
             if obj.employee == request.user or obj.manager == request.user:
                 return True
             from apps.users.views import get_subordinate_ids
