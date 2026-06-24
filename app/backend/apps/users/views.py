@@ -147,6 +147,18 @@ class UserViewSet(viewsets.ModelViewSet):
 
         return qs
 
+    @staticmethod
+    def _parse_date(value):
+        if not value:
+            return None
+        from datetime import datetime
+        for fmt in ("%d/%m/%Y", "%Y-%m-%d"):
+            try:
+                return datetime.strptime(value, fmt).date()
+            except ValueError:
+                continue
+        return None
+
     @action(detail=False, methods=["post"])
     def import_csv(self, request):
         if request.user.role not in RH_ROLES:
@@ -225,6 +237,154 @@ class UserViewSet(viewsets.ModelViewSet):
                 errors.append(f"Ligne {row_num} ({email}): {e}")
 
         return Response({"created": created, "errors": errors, "total": len(reader)})
+
+    @action(detail=False, methods=["post"])
+    def import_kostango(self, request):
+        if request.user.role not in RH_ROLES:
+            return Response({"error": "Accès refusé"}, status=status.HTTP_403_FORBIDDEN)
+
+        file = request.FILES.get("file")
+        if not file:
+            return Response({"error": "Fichier CSV requis"}, status=status.HTTP_400_BAD_REQUEST)
+
+        decoded = file.read().decode("utf-8-sig")
+        reader = csv.DictReader(io.StringIO(decoded))
+
+        rows = []
+        for row_num, row in enumerate(reader, start=2):
+            email = row.get("personne email", "").strip().lower()
+            if not email:
+                continue
+            rows.append((row_num, row, email))
+
+        created = 0
+        errors = []
+        user_map = {}
+
+        # Premier passage : créer tous les utilisateurs
+        for row_num, row, email in rows:
+            try:
+                first_name = row.get("Prénom", "").strip()
+                last_name = row.get("Nom", "").strip()
+
+                # Site — on prend le dernier segment après " > "
+                site_full = row.get("Site (nom complet)", "").strip()
+                site_name = site_full.split(" > ")[-1] if site_full else ""
+                site = None
+                if site_name:
+                    site, _ = Site.objects.get_or_create(name=site_name)
+
+                position_name = row.get("Poste", "").strip()
+                position = None
+                if position_name:
+                    position, _ = Position.objects.get_or_create(name=position_name)
+
+                sexe_map = {"Homme": "homme", "Femme": "femme", "": ""}
+                sexe = sexe_map.get(row.get("Sexe", "").strip(), "")
+
+                date_naissance = self._parse_date(row.get("Date de naissance", "").strip())
+                hire_date = self._parse_date(row.get("Date d'embauche", "").strip())
+                date_sortie = self._parse_date(row.get("Date de sortie", "").strip())
+
+                type_contrat_map = {
+                    "CDI": "cdi", "CDD": "cdd",
+                    "Intérim": "interim", "INTERIM": "interim",
+                    "Alternance": "alternance",
+                    "Stage": "stage",
+                }
+                type_contrat_val = row.get("Type contrat", "").strip()
+                type_contrat = type_contrat_map.get(type_contrat_val, "")
+
+                # Statut actif/inactif/sortie
+                statut = "actif"
+                if date_sortie:
+                    sortie_date = self._parse_date(row.get("Date de sortie", "").strip())
+                    if sortie_date:
+                        statut = "sortie"
+
+                coefficient = row.get("Coefficient", "").strip()
+
+                forfait_jour = row.get("Forfait jour", "false").strip().lower() == "true"
+                tickets_restaurant = row.get("Tickets restaurant", "false").strip().lower() == "true"
+
+                agence_interim = row.get("Agence d'intérim", "").strip()
+
+                # Déterminer le rôle
+                role = "employee"
+
+                # Déterminer cadre + forfait_jour depuis le statut Kostango
+                statut_kostango = row.get("Statut", "").strip()
+                cadre = "Cadre" in statut_kostango
+                if "FJ" in statut_kostango or "fj" in statut_kostango:
+                    forfait_jour = True
+
+                user, created_flag = User.objects.get_or_create(
+                    email=email,
+                    defaults={
+                        "username": email,
+                        "first_name": first_name,
+                        "last_name": last_name,
+                        "role": role,
+                        "sexe": sexe,
+                        "date_naissance": date_naissance,
+                        "site": site,
+                        "position": position,
+                        "matricule": row.get("Matricule", "").strip(),
+                        "type_contrat": type_contrat,
+                        "statut": statut,
+                        "coefficient": coefficient,
+                        "forfait_jour": forfait_jour,
+                        "tickets_restaurant": tickets_restaurant,
+                        "cadre": cadre,
+                        "agence_interim": agence_interim,
+                        "hire_date": hire_date,
+                        "date_sortie": date_sortie,
+                    },
+                )
+                if created_flag:
+                    user.set_unusable_password()
+                    user.save()
+                    created += 1
+                user_map[email] = user
+            except Exception as e:
+                errors.append(f"Ligne {row_num} ({email}): {e}")
+
+        # Deuxième passage : assigner les managers
+        for row_num, row, email in rows:
+            try:
+                user = user_map.get(email)
+                if not user:
+                    continue
+                # Manager : premier email dans Supérieurs emails
+                superieurs = row.get("Supérieurs emails", "").strip()
+                manager_email = None
+                if superieurs:
+                    manager_email = superieurs.split(",")[0].strip().lower()
+                if not manager_email:
+                    noms = row.get("valideur N+1", "").strip().lower()
+                    if not noms:
+                        continue
+                if manager_email and manager_email in user_map:
+                    user.manager = user_map[manager_email]
+                    user.save(update_fields=["manager"])
+            except Exception as e:
+                errors.append(f"Ligne {row_num} ({email}) - manager: {e}")
+
+        # Troisième passage : promouvoir en manager ceux qui sont N+1 de quelqu'un
+        manager_emails = set()
+        for row_num, row, email in rows:
+            superieurs = row.get("Supérieurs emails", "").strip()
+            if superieurs:
+                mgr = superieurs.split(",")[0].strip().lower()
+                if mgr and mgr in user_map:
+                    manager_emails.add(mgr)
+        for mgr_email in manager_emails:
+            mgr = user_map.get(mgr_email)
+            if mgr and mgr.role == "employee":
+                mgr.role = "manager"
+                mgr.save(update_fields=["role"])
+
+        return Response({"created": created, "errors": errors, "total": len(rows)})
 
     @action(detail=False, methods=["get"])
     def next_matricule(self, request):

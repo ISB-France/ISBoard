@@ -101,6 +101,26 @@ export default function Users() {
               {importing ? "Import..." : "Importer CSV"}
               <input type="file" accept=".csv" onChange={handleImport} hidden />
             </label>
+            <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary">
+              <Upload className="h-4 w-4" />
+              {importing ? "Import Kostango..." : "Kostango"}
+              <input type="file" accept=".csv" onChange={async (e) => {
+                const file = e.target.files?.[0];
+                if (!file) return;
+                setImporting(true);
+                const form = new FormData();
+                form.append("file", file);
+                try {
+                  const resp = await api.post("/users/import_kostango/", form);
+                  alert(`${resp.data.created} utilisateurs importés${resp.data.errors?.length ? "\nErreurs:\n" + resp.data.errors.join("\n") : ""}`);
+                  refetch();
+                } catch (err) {
+                  console.error(err);
+                }
+                setImporting(false);
+                e.target.value = "";
+              }} hidden />
+            </label>
             <Button onClick={() => navigate("/users/new")} className="gap-2">
               <Plus className="h-4 w-4" />
               Nouvel utilisateur
