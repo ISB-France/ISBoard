@@ -358,35 +358,38 @@ class UserViewSet(viewsets.ModelViewSet):
             except Exception as e:
                 errors.append(f"Ligne {row_num} ({email}): {e}")
 
-        # Deuxième passage : assigner les managers
+        # Construire un mapping nom → email pour chercher les managers par nom
+        name_to_email = {}
+        for u_email, u in user_map.items():
+            full = f"{u.first_name} {u.last_name}".strip().lower()
+            if full:
+                name_to_email[full] = u_email
+            name_to_email[u.email.lower()] = u_email
+
+        # Deuxième passage : assigner les managers via valideur N+1
         for row_num, row, email in rows:
             try:
                 user = user_map.get(email)
                 if not user:
                     continue
-                # Manager : premier email dans Supérieurs emails
-                superieurs = row.get("Supérieurs emails", "").strip()
-                manager_email = None
-                if superieurs:
-                    manager_email = superieurs.split(",")[0].strip().lower()
-                if not manager_email:
-                    noms = row.get("valideur N+1", "").strip().lower()
-                    if not noms:
-                        continue
+                valideur = row.get("valideur N+1", "").strip().lower()
+                if not valideur:
+                    continue
+                manager_email = name_to_email.get(valideur)
                 if manager_email and manager_email in user_map:
                     user.manager = user_map[manager_email]
                     user.save(update_fields=["manager"])
             except Exception as e:
                 errors.append(f"Ligne {row_num} ({email}) - manager: {e}")
 
-        # Troisième passage : promouvoir en manager ceux qui sont N+1 de quelqu'un
+        # Troisième passage : promouvoir en manager ceux qui sont valideur N+1 de quelqu'un
         manager_emails = set()
         for row_num, row, email in rows:
-            superieurs = row.get("Supérieurs emails", "").strip()
-            if superieurs:
-                mgr = superieurs.split(",")[0].strip().lower()
-                if mgr and mgr in user_map:
-                    manager_emails.add(mgr)
+            valideur = row.get("valideur N+1", "").strip().lower()
+            if valideur:
+                mgr_email = name_to_email.get(valideur)
+                if mgr_email and mgr_email in user_map:
+                    manager_emails.add(mgr_email)
         for mgr_email in manager_emails:
             mgr = user_map.get(mgr_email)
             if mgr and mgr.role == "employee":
