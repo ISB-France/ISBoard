@@ -55,9 +55,12 @@ export default function Users() {
     queryFn: () => api.get("/users/").then((r) => r.data),
   });
 
-  const getAllDescendants = (userId: number, all: User[]): User[] => {
-    const direct = all.filter((e) => e.manager === userId);
-    return [...direct, ...direct.flatMap((d) => getAllDescendants(d.id, all))];
+  const getAllDescendants = (userId: number, all: User[], visited?: Set<number>): User[] => {
+    const seen = visited ?? new Set<number>();
+    if (seen.has(userId)) return [];
+    seen.add(userId);
+    const direct = all.filter((e) => e.manager === userId && !seen.has(e.id));
+    return [...direct, ...direct.flatMap((d) => getAllDescendants(d.id, all, seen))];
   };
 
   const currentManager = allUsers?.find((u) => String(u.id) === managerId);
