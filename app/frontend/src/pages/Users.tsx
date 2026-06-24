@@ -23,12 +23,6 @@ const roleLabel: Record<string, string> = {
   alternant: "Alternant",
 };
 
-const onboardingLabel: Record<string, string> = {
-  pending: "En attente",
-  in_progress: "En cours",
-  completed: "Terminé",
-};
-
 export default function Users() {
   const navigate = useNavigate();
   const [managerId, setManagerId] = useState<string>("");

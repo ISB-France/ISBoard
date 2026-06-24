@@ -48,6 +48,8 @@ export interface User {
   manager: number | null;
   manager_name: string | null;
   agence_interim: string;
+  icon: string;
+  preferences: string;
 
 }
 
@@ -110,6 +112,7 @@ export interface Interview {
   due_date: string;
   content: Record<string, unknown>;
   previous_content: Section[];
+  document_url: string | null;
   created_at: string;
   updated_at: string;
 }
