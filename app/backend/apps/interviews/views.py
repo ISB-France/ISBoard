@@ -35,7 +35,7 @@ class InterviewPermission(permissions.BasePermission):
             if obj.employee_id in ids:
                 return True
             return False
-        if view.action in ("update", "partial_update"):
+        if view.action in ("update", "partial_update", "upload_document", "remove_document"):
             if request.user.role in RH_ROLES:
                 return True
             if obj.manager == request.user:

@@ -194,7 +194,7 @@ export default function Interviews() {
                             <Download className="mr-1 h-4 w-4" />
                             PDF
                           </Button>
-                          {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
+                          {(currentUser?.role === "admin" || currentUser?.role === "rh" || currentUser?.role === "manager") && (
                             <>
                               {iv.document_url ? (
                                 <>
@@ -222,7 +222,7 @@ export default function Interviews() {
                         <Button variant="ghost" size="sm" onClick={() => navigate(`/interviews/${iv.id}`)}>
                           {iv.status === "draft" ? "Commencer" : iv.status === "in_progress" ? "Reprendre" : "Voir"}
                         </Button>
-                        {(currentUser?.role === "admin" || currentUser?.role === "rh") && (
+                        {(currentUser?.role === "admin" || currentUser?.role === "rh" || currentUser?.role === "manager") && (
                           <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/interviews/${iv.id}/edit`); }}>
                             Modifier
                           </Button>
