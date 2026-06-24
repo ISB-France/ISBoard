@@ -70,6 +70,7 @@ export default function Profile() {
     form.append("avatar", file);
     try {
       await api.post("/auth/profile/avatar/", form);
+      setIcon("");
       queryClient.invalidateQueries({ queryKey: ["me"] });
     } catch {
       alert("Erreur lors de l'upload");
