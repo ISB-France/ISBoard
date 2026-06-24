@@ -90,6 +90,9 @@ class MeView(generics.RetrieveUpdateAPIView):
         return self.request.user
 
     def perform_update(self, serializer):
+        if "icon" in serializer.validated_data and serializer.validated_data["icon"]:
+            self.request.user.photo = None
+            self.request.user.save(update_fields=["photo"])
         serializer.save()
 
 class ProfileAvatarView(APIView):
@@ -101,7 +104,8 @@ class ProfileAvatarView(APIView):
         if not file:
             return Response({"error": "Aucun fichier fourni"}, status=status.HTTP_400_BAD_REQUEST)
         user.photo = file
-        user.save(update_fields=["photo"])
+        user.icon = ""
+        user.save(update_fields=["photo", "icon"])
         serializer = UserMeSerializer(user, context={"request": request})
         return Response(serializer.data)
 
