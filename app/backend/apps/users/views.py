@@ -264,8 +264,17 @@ class UserViewSet(viewsets.ModelViewSet):
         # Premier passage : créer tous les utilisateurs
         for row_num, row, email in rows:
             try:
+                # Prénom/Nom : d'abord les colonnes dédiées, sinon "personne nom complet"
                 first_name = row.get("Prénom", "").strip()
                 last_name = row.get("Nom", "").strip()
+                if not first_name and not last_name:
+                    full = row.get("personne nom complet", "").strip()
+                    parts = full.split(" ", 1)
+                    if len(parts) == 2:
+                        first_name = parts[0].strip().capitalize()
+                        last_name = parts[1].strip().upper()
+                    elif len(parts) == 1 and parts[0]:
+                        last_name = parts[0].strip().upper()
 
                 # Site — on prend le dernier segment après " > "
                 site_full = row.get("Site (nom complet)", "").strip()

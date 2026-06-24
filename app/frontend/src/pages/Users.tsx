@@ -10,6 +10,7 @@ import { Button } from "../components/ui/button";
 import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import ErrorScreen from "../components/ErrorScreen";
+import { Toast, useToast } from "../components/Toast";
 import api from "../api";
 import type { User, Site } from "../types";
 
@@ -34,6 +35,7 @@ export default function Users() {
   const [siteId, setSiteId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [importing, setImporting] = useState(false);
+  const { toast, show, setToast } = useToast();
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["me"],
@@ -112,7 +114,8 @@ export default function Users() {
                 form.append("file", file);
                 try {
                   const resp = await api.post("/users/import_kostango/", form);
-                  alert(`${resp.data.created} utilisateurs importés${resp.data.errors?.length ? "\nErreurs:\n" + resp.data.errors.join("\n") : ""}`);
+                  const msg = `${resp.data.created} utilisateurs importés${resp.data.errors?.length ? " — " + resp.data.errors.slice(0, 3).join(", ") + (resp.data.errors.length > 3 ? "..." : "") : ""}`;
+                  show(msg, resp.data.errors?.length ? "error" : "success");
                   refetch();
                 } catch (err) {
                   console.error(err);
@@ -269,6 +272,7 @@ export default function Users() {
           </table>
         </CardContent>
       </Card>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </AppLayout>
   );
 }
