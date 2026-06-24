@@ -183,27 +183,17 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <span className="text-sm text-muted-foreground">
               {user?.first_name} {user?.last_name}
             </span>
-            <div className="relative">
-              <Avatar className="h-8 w-8">
-                {user?.photo || user?.icon ? (
-                  <>
-                    {user.photo && <img src={user.photo} alt="" className="h-full w-full rounded-full object-cover" />}
-                    {!user.photo && user.icon && (
-                      <span className="flex h-full w-full items-center justify-center text-lg">{user.icon}</span>
-                    )}
-                  </>
-                ) : (
-                  <AvatarFallback className="text-xs font-semibold bg-primary-foreground text-primary">
-                    {initials}
-                  </AvatarFallback>
-                )}
-              </Avatar>
-              {user?.photo && user?.icon && (
-                <span className="absolute -bottom-0.5 -right-0.5 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-background text-[7px] shadow-sm">
-                  {user.icon}
-                </span>
+            <Avatar className="h-8 w-8">
+              {user?.photo ? (
+                <img src={user.photo} alt="" className="h-full w-full rounded-full object-cover" />
+              ) : user?.icon ? (
+                <span className="flex h-full w-full items-center justify-center text-lg">{user.icon}</span>
+              ) : (
+                <AvatarFallback className="text-xs font-semibold bg-primary-foreground text-primary">
+                  {initials}
+                </AvatarFallback>
               )}
-            </div>
+            </Avatar>
           </button>
         </header>
         <main className="flex-1 bg-background p-6 lg:p-8">{children}</main>
