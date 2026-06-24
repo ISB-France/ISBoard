@@ -354,6 +354,32 @@ class UserViewSet(viewsets.ModelViewSet):
                     user.set_unusable_password()
                     user.save()
                     created += 1
+                else:
+                    # Mise à jour des champs (synchronisation Kostango)
+                    changed = False
+                    for f, v in [
+                        ("first_name", first_name),
+                        ("last_name", last_name),
+                        ("sexe", sexe),
+                        ("date_naissance", date_naissance),
+                        ("site", site),
+                        ("position", position),
+                        ("matricule", row.get("Matricule", "").strip()),
+                        ("type_contrat", type_contrat),
+                        ("statut", statut),
+                        ("coefficient", coefficient),
+                        ("forfait_jour", forfait_jour),
+                        ("tickets_restaurant", tickets_restaurant),
+                        ("cadre", cadre),
+                        ("agence_interim", agence_interim),
+                        ("hire_date", hire_date),
+                        ("date_sortie", date_sortie),
+                    ]:
+                        if getattr(user, f) != v:
+                            setattr(user, f, v)
+                            changed = True
+                    if changed:
+                        user.save()
                 user_map[email] = user
             except Exception as e:
                 errors.append(f"Ligne {row_num} ({email}): {e}")
