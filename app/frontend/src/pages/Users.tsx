@@ -171,7 +171,7 @@ export default function Users() {
             </Button>
           )}
           <span className="text-muted-foreground">
-            N-1 de {currentManager?.first_name} {currentManager?.last_name}
+            N-1 de {currentManager ? (currentManager.first_name || currentManager.last_name ? `${currentManager.first_name} ${currentManager.last_name}` : currentManager.email) : ""}
           </span>
         </div>
       )}
