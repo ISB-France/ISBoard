@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { useLocation } from "react-router-dom";
 
 interface ColorTheme {
   id: string;
@@ -8,7 +9,7 @@ interface ColorTheme {
   dark: boolean;
 }
 
-const THEMES: ColorTheme[] = [
+export const THEMES: ColorTheme[] = [
   { id: "isb", label: "ISB", icon: "🟤", hue: 36, dark: false },
   { id: "blue", label: "Bleu", icon: "🔵", hue: 220, dark: false },
   { id: "green", label: "Vert", icon: "🟢", hue: 142, dark: false },
@@ -31,7 +32,7 @@ export function getStoredThemeId(): string {
   return localStorage.getItem(STORAGE_KEY) || "";
 }
 
-function applyTheme(hue: number, dark: boolean) {
+export function applyTheme(hue: number, dark: boolean) {
   const root = document.documentElement;
   const bgLight = dark ? 8 : 97;
   const fgLight = dark ? 90 : 12;
@@ -72,6 +73,9 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType | null>(null);
 
 export function ColorThemeProvider({ children }: { children: ReactNode }) {
+  const location = useLocation();
+  const isLoginPage = location.pathname === "/login" || location.pathname.startsWith("/auth/");
+
   const [theme, setThemeState] = useState<ColorTheme>(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved) {
@@ -82,8 +86,12 @@ export function ColorThemeProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
-    applyTheme(theme.hue, theme.dark);
-  }, [theme]);
+    if (isLoginPage) {
+      applyTheme(36, false);
+    } else {
+      applyTheme(theme.hue, theme.dark);
+    }
+  }, [theme, isLoginPage]);
 
   const setTheme = (id: string) => {
     const found = THEMES.find((t) => t.id === id);
