@@ -39,4 +39,6 @@ Thumbs.db
 .docker/
 .env
 .env.*
+!deploy/.env.prod.example
+!deploy/.env.recette.example
 Export\ Kostango-*.csv
