@@ -10,7 +10,7 @@ import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import { Toast, useToast } from "../components/Toast";
 import api from "../api";
-import type { Interview, User, Question, Section } from "../types";
+import type { Interview, User, Section } from "../types";
 
 const statusLabel: Record<string, string> = {
   draft: "Brouillon",
