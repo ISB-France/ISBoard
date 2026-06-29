@@ -12,7 +12,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY apps/ apps/
+COPY config/ config/
+COPY manage.py .
 
 RUN mkdir -p /app/staticfiles && python manage.py collectstatic --noinput
 

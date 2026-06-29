@@ -25,6 +25,7 @@ systemctl enable --now docker
 # ── 2. Création des dossiers ──
 mkdir -p /var/www/app-prod
 mkdir -p /var/www/app-recette
+mkdir -p /etc/isboard
 
 # ── 3. Clonage du repo (production) ──
 if [ ! -d /var/www/app-prod/.git ]; then
@@ -62,20 +63,21 @@ fi
 nginx -t && systemctl enable --now nginx
 
 # ── 9. Fichier .env.prod ──
-if [ ! -f /var/www/app-prod/.env.prod ]; then
-  cp /var/www/app-prod/deploy/.env.prod.example /var/www/app-prod/.env.prod
-  echo ">>> Édite /var/www/app-prod/.env.prod avec tes vraies valeurs"
+mkdir -p /etc/isboard
+if [ ! -f /etc/isboard/prod.env ]; then
+  cp /var/www/app-prod/deploy/.env.prod.example /etc/isboard/prod.env
+  echo ">>> Édite /etc/isboard/prod.env avec tes vraies valeurs"
 fi
 
 # ── 10. Fichier .env.recette ──
-if [ ! -f /var/www/app-recette/.env.recette ]; then
-  cp /var/www/app-recette/deploy/.env.recette.example /var/www/app-recette/.env.recette
-  echo ">>> Édite /var/www/app-recette/.env.recette avec tes vraies valeurs"
+if [ ! -f /etc/isboard/recette.env ]; then
+  cp /var/www/app-recette/deploy/.env.recette.example /etc/isboard/recette.env
+  echo ">>> Édite /etc/isboard/recette.env avec tes vraies valeurs"
 fi
 
 echo ""
 echo "=== Setup terminé ! ==="
-echo "1. Édite les fichiers .env.prod et .env.recette"
+echo "1. Édite les fichiers /etc/isboard/prod.env et /etc/isboard/recette.env"
 echo "2. Ajoute la clé publique ci-dessus dans GitHub Deploy Keys"
 echo "3. Ajoute les secrets GitHub (SSH_HOST, SSH_USER, SSH_PRIVATE_KEY, DEPLOY_PATH_PROD, DEPLOY_PATH_RECETTE)"
 echo "4. Lance le premier déploiement manuel depuis GitHub Actions"

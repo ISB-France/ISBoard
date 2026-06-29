@@ -18,10 +18,10 @@
 
 ## Dossiers
 
-| Environnement | Chemin | Branche |
-|---|---|---|
-| Production | `/var/www/app-prod` | `main` |
-| Recette | `/var/www/app-recette` | `recette` |
+| Environnement | Chemin code | Fichier .env | Branche |
+|---|---|---|---|
+| Production | `/var/www/app-prod` | `/etc/isboard/prod.env` | `main` |
+| Recette | `/var/www/app-recette` | `/etc/isboard/recette.env` | `recette` |
 
 ## Workflow Git
 
@@ -40,9 +40,9 @@ dev ──→ recette ──→ main
 # 1. Exécuter le script d'initialisation (une seule fois)
 sudo bash /var/www/app-prod/deploy/scripts/setup-server.sh
 
-# 2. Éditer les fichiers .env
-nano /var/www/app-prod/.env.prod
-nano /var/www/app-recette/.env.recette
+# 2. Éditer les fichiers .env (hors du dossier servi)
+nano /etc/isboard/prod.env
+nano /etc/isboard/recette.env
 
 # 3. Ajouter les secrets dans GitHub
 # Settings → Secrets and variables → Actions

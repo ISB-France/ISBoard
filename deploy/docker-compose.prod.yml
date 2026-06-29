@@ -15,7 +15,7 @@ services:
     build:
       context: ./app/backend
       dockerfile: Dockerfile.prod
-    env_file: .env.prod
+    env_file: /etc/isboard/prod.env
     depends_on:
       db:
         condition: service_started
