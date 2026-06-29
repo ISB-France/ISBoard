@@ -70,6 +70,7 @@ export default function Profile() {
     form.append("avatar", file);
     try {
       await api.post("/auth/profile/avatar/", form);
+      setIcon("");
       queryClient.invalidateQueries({ queryKey: ["me"] });
     } catch {
       alert("Erreur lors de l'upload");
@@ -86,10 +87,10 @@ export default function Profile() {
           <CardHeader className="flex flex-col items-center gap-4 pb-4 pt-8">
             <div className="relative">
               <Avatar className="h-24 w-24">
-                {user.icon ? (
-                  <span className="flex h-full w-full items-center justify-center text-4xl">{user.icon}</span>
-                ) : user.photo ? (
+                {user.photo ? (
                   <img src={user.photo} alt="" className="h-full w-full rounded-full object-cover" />
+                ) : user.icon ? (
+                  <span className="flex h-full w-full items-center justify-center text-4xl">{user.icon}</span>
                 ) : (
                   <AvatarFallback className="text-xl font-semibold bg-primary-foreground text-primary">
                     {initials}

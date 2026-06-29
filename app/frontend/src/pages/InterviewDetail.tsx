@@ -10,20 +10,7 @@ import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import { Toast, useToast } from "../components/Toast";
 import api from "../api";
-import type { Interview, User, TableColumn } from "../types";
-
-type Question = {
-  id: string;
-  label: string;
-  type: "textarea" | "rating";
-  answer: string | number | null;
-};
-
-type Section = {
-  id: string;
-  title: string;
-  questions: Question[];
-};
+import type { Interview, User, Section } from "../types";
 
 const statusLabel: Record<string, string> = {
   draft: "Brouillon",
@@ -39,6 +26,7 @@ export default function InterviewDetail() {
   const [interview, setInterview] = useState<Interview | null>(null);
   const [sections, setSections] = useState<Section[]>([]);
   const [saving, setSaving] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const { toast, show, setToast } = useToast();
 
   const { data: currentUser } = useQuery<User>({
@@ -115,8 +103,12 @@ export default function InterviewDetail() {
       const res = await api.patch(`/interviews/${id}/`, payload);
       setInterview(res.data);
       setSections(res.data.content?.sections || []);
-      show(newStatus === "completed" ? "Entretien finalisé" : "Entretien enregistré");
-      setTimeout(() => navigate("/interviews"), 800);
+      if (newStatus === "completed") {
+        setSuccessMessage("Entretien finalisé avec succès");
+      } else {
+        show("Entretien enregistré");
+        setTimeout(() => navigate("/interviews"), 800);
+      }
     } catch {
       show("Erreur lors de l'enregistrement", "error");
     } finally {
@@ -126,8 +118,10 @@ export default function InterviewDetail() {
 
   const downloadPdf = useCallback(async () => {
     const res = await api.get(`/interviews/${id}/pdf/`, { responseType: "blob" });
+    const url = URL.createObjectURL(res.data);
+    const a = document.createElement("a");
     a.href = url;
-    a.download = filename;
+    a.download = `entretien-${id}.pdf`;
     a.click();
     URL.revokeObjectURL(url);
   }, [id]);
@@ -139,10 +133,10 @@ export default function InterviewDetail() {
   const canEdit = currentUser?.role === "admin" || currentUser?.role === "rh" || interview.manager === currentUser?.id || (isOwn && hasNoManager) || (currentUser?.role === "manager" && !isOwn);
   const isReadOnly = !canEdit || interview.status === "completed" || interview.status === "signed" || interview.status === "cancelled";
 
-  const prevAnswers = new Map<string, string | number | null>();
+  const prevAnswers = new Map<string, string | number | (string | number | null)[][] | null>();
   for (const section of interview.previous_content || []) {
     for (const q of section.questions) {
-      prevAnswers.set(q.id, q.answer);
+      if (q.answer !== undefined) prevAnswers.set(q.id, q.answer);
     }
   }
 
@@ -244,15 +238,15 @@ export default function InterviewDetail() {
                   <tr><td className="py-1 text-muted-foreground">Nom</td><td className="py-1 pl-4">{interview.employee_detail?.last_name || "-"}</td></tr>
                   <tr><td className="py-1 text-muted-foreground">Prénom</td><td className="py-1 pl-4">{interview.employee_detail?.first_name || "-"}</td></tr>
                   <tr><td className="py-1 text-muted-foreground">Sexe</td><td className="py-1 pl-4">
-                    {{ homme: "Homme", femme: "Femme", non_binaire: "Non-Binaire" }[interview.employee_detail?.sexe || ""] || "-"}
+                    {({ homme: "Homme", femme: "Femme", non_binaire: "Non-Binaire" } as Record<string, string>)[interview.employee_detail?.sexe ?? ""] || "-"}
                   </td></tr>
                   <tr><td className="py-1 text-muted-foreground">Date naissance</td><td className="py-1 pl-4">{interview.employee_detail?.date_naissance || "-"}</td></tr>
                   <tr><td className="py-1 text-muted-foreground">Date embauche</td><td className="py-1 pl-4">{interview.employee_detail?.hire_date || "-"}</td></tr>
                   <tr><td className="py-1 text-muted-foreground">Type contrat</td><td className="py-1 pl-4">
-                    {{ cdi: "CDI", cdd: "CDD", interim: "Intérim", alternance: "Alternance", stage: "Stage" }[interview.employee_detail?.type_contrat || ""] || "-"}
+                    {({ cdi: "CDI", cdd: "CDD", interim: "Intérim", alternance: "Alternance", stage: "Stage" } as Record<string, string>)[interview.employee_detail?.type_contrat ?? ""] || "-"}
                   </td></tr>
                   <tr><td className="py-1 text-muted-foreground">Statut</td><td className="py-1 pl-4">
-                    {{ actif: "Actif", inactif: "Inactif", sortie: "Sortie" }[interview.employee_detail?.statut || ""] || "-"}
+                    {({ actif: "Actif", inactif: "Inactif", sortie: "Sortie" } as Record<string, string>)[interview.employee_detail?.statut ?? ""] || "-"}
                   </td></tr>
                   <tr><td className="py-1 text-muted-foreground">Poste</td><td className="py-1 pl-4">{interview.employee_detail?.position_name || "-"}</td></tr>
                   <tr><td className="py-1 text-muted-foreground">Site</td><td className="py-1 pl-4">{interview.employee_detail?.site_name || "-"}</td></tr>
@@ -413,6 +407,19 @@ export default function InterviewDetail() {
         </Card>
       ))}
 
+      {successMessage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="mx-4 w-full max-w-md rounded-lg border border-border bg-white p-6 shadow-lg">
+            <h3 className="mb-2 text-lg font-semibold">Succès</h3>
+            <p className="mb-6 text-sm text-muted-foreground">{successMessage}</p>
+            <div className="flex justify-end">
+              <Button onClick={() => { setSuccessMessage(null); navigate("/interviews"); }}>
+                OK
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </AppLayout>
   );

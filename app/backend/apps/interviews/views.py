@@ -1,4 +1,3 @@
-from django.db import models
 from django.db.models import Count
 from django.http import HttpResponse
 from django.shortcuts import render
@@ -9,7 +8,6 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from .models import Campaign, Interview, InterviewTemplate
 from .serializers import CampaignSerializer, InterviewSerializer, InterviewTemplateSerializer
-from .templates import TEMPLATES
 from apps.users.models import RH_ROLES, User
 
 
@@ -35,7 +33,7 @@ class InterviewPermission(permissions.BasePermission):
             if obj.employee_id in ids:
                 return True
             return False
-        if view.action in ("update", "partial_update"):
+        if view.action in ("update", "partial_update", "upload_document", "remove_document"):
             if request.user.role in RH_ROLES:
                 return True
             if obj.manager == request.user:
@@ -118,6 +116,7 @@ class InterviewViewSet(viewsets.ModelViewSet):
                 "service": employee.service.name if employee.service else None,
                 "site": employee.site.name if employee.site else None,
                 "coefficient": employee.coefficient,
+                "salaire_brut": str(employee.salaire_brut) if employee.salaire_brut else None,
             }
         serializer.validated_data["content"] = content
         serializer.save(manager=self.request.user)
@@ -131,13 +130,13 @@ class InterviewViewSet(viewsets.ModelViewSet):
                 "service": employee.service.name if employee.service else None,
                 "site": employee.site.name if employee.site else None,
                 "coefficient": employee.coefficient,
+                "salaire_brut": str(employee.salaire_brut) if employee.salaire_brut else None,
             }
         serializer.validated_data["content"] = content
         serializer.save()
 
     @action(detail=False, methods=["get"])
     def stats(self, request):
-        user = request.user
         qs = self.get_queryset()
         now = timezone.now().date()
         return Response({
@@ -177,38 +176,58 @@ class InterviewViewSet(viewsets.ModelViewSet):
             ])
         return response
 
-    @action(detail=True, methods=["get"])
-    def print(self, request, pk=None):
-        interview = self.get_object()
+    def _get_print_context(self, interview):
         sections = interview.content.get("sections", [])
-        history = Interview.objects.filter(employee=interview.employee, status__in=("completed", "signed")).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at")[:6]
-        career = Interview.objects.filter(
-            employee=interview.employee,
-            type="professional",
-        ).order_by("created_at")
-        return render(request, "interviews/print.html", {
+        all_past = list(Interview.objects.filter(employee=interview.employee, status__in=("completed", "signed")).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at"))
+
+        if interview.type == "bilan":
+            career = Interview.objects.filter(
+                employee=interview.employee,
+                status__in=("completed", "signed"),
+            ).exclude(pk=interview.pk).order_by("created_at")
+        else:
+            career = Interview.objects.filter(
+                employee=interview.employee,
+                type="professional",
+            ).order_by("created_at")
+
+        salary_chrono = []
+        training_history = []
+        for iv in reversed(all_past):
+            snap = iv.content.get("employee_snapshot", {})
+            sal = snap.get("salaire_brut")
+            if sal:
+                salary_chrono.append({"date": iv.created_at, "type": iv.get_type_display(), "salary": sal, "coefficient": snap.get("coefficient", "")})
+            entries = []
+            for section in iv.content.get("sections", []):
+                for q in section.get("questions", []):
+                    qid = q.get("id", "")
+                    if any(kw in qid for kw in ["formation", "cpf", "vae"]):
+                        if q.get("answer"):
+                            entries.append({"label": q.get("label", qid), "answer": q.get("answer", "")})
+            if entries:
+                training_history.append({"date": iv.created_at, "type": iv.get_type_display(), "entries": entries})
+        training_history.reverse()
+
+        return {
             "interview": interview,
             "sections": sections,
-            "history": history,
+            "history": all_past[:6],
             "career": career,
-        })
+            "training_history": training_history,
+            "salary_history": salary_chrono,
+        }
+
+    @action(detail=True, methods=["get"])
+    def print(self, request, pk=None):
+        return render(request, "interviews/print.html", self._get_print_context(self.get_object()))
 
     @action(detail=True, methods=["get"])
     def pdf(self, request, pk=None):
         from weasyprint import HTML
         interview = self.get_object()
-        sections = interview.content.get("sections", [])
-        history = Interview.objects.filter(employee=interview.employee, status__in=("completed", "signed")).exclude(pk=interview.pk).select_related("manager", "template").order_by("-created_at")[:6]
-        career = Interview.objects.filter(
-            employee=interview.employee,
-            type="professional",
-        ).order_by("created_at")
-        html = render_to_string("interviews/print.html", {
-            "interview": interview,
-            "sections": sections,
-            "history": history,
-            "career": career,
-        })
+        ctx = self._get_print_context(interview)
+        html = render_to_string("interviews/print.html", ctx)
         pdf = HTML(string=html).write_pdf()
         emp = interview.employee
         filename = f"{interview.get_type_display()}_{emp.last_name}_{emp.first_name}.pdf"

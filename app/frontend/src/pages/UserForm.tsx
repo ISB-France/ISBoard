@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { ArrowLeft, Check, Plus, X, Search } from "lucide-react";
@@ -25,7 +25,6 @@ export default function UserForm() {
 
   // Contrat
   const [matricule, setMatricule] = useState("");
-  const matriculeLoading = useRef(false);
   const [hireDate, setHireDate] = useState("");
   const [dateSortie, setDateSortie] = useState("");
   const [typeContrat, setTypeContrat] = useState("");
@@ -40,7 +39,6 @@ export default function UserForm() {
   const [role, setRole] = useState("employee");
   const [service, setService] = useState("");
   const [position, setPosition] = useState("");
-  const [fonction, setFonction] = useState("");
   const [site, setSite] = useState("");
   const [manager, setManager] = useState("");
   const [managerSearch, setManagerSearch] = useState("");

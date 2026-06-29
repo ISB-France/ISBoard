@@ -3,6 +3,7 @@ import { LogIn } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Separator } from "../components/ui/separator";
+import LoginLoadingScreen from "../components/LoginLoadingScreen";
 import api from "../api";
 
 export default function LoginPage() {
@@ -35,6 +36,8 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  if (loading) return <LoginLoadingScreen />;
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-[#FDFAF5] p-4">

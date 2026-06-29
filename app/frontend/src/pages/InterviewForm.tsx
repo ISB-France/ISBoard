@@ -6,7 +6,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card"
 import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import AppLayout from "../components/AppLayout";
-import LoadingScreen from "../components/LoadingScreen";
 import api from "../api";
 import type { InterviewTemplate, User } from "../types";
 

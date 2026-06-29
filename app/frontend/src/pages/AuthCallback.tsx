@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import LoginLoadingScreen from "../components/LoginLoadingScreen";
 
 export default function AuthCallback() {
   const [params] = useSearchParams();
@@ -17,5 +18,5 @@ export default function AuthCallback() {
     }
   }, [params]);
 
-  return <p>Connexion en cours...</p>;
+  return <LoginLoadingScreen />;
 }

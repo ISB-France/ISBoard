@@ -10,6 +10,7 @@ import { Button } from "../components/ui/button";
 import AppLayout from "../components/AppLayout";
 import LoadingScreen from "../components/LoadingScreen";
 import ErrorScreen from "../components/ErrorScreen";
+import { Toast, useToast } from "../components/Toast";
 import api from "../api";
 import type { User, Site } from "../types";
 
@@ -22,18 +23,13 @@ const roleLabel: Record<string, string> = {
   alternant: "Alternant",
 };
 
-const onboardingLabel: Record<string, string> = {
-  pending: "En attente",
-  in_progress: "En cours",
-  completed: "Terminé",
-};
-
 export default function Users() {
   const navigate = useNavigate();
   const [managerId, setManagerId] = useState<string>("");
   const [siteId, setSiteId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [importing, setImporting] = useState(false);
+  const { toast, show, setToast } = useToast();
 
   const { data: currentUser } = useQuery<User>({
     queryKey: ["me"],
@@ -59,9 +55,12 @@ export default function Users() {
     queryFn: () => api.get("/users/").then((r) => r.data),
   });
 
-  const getAllDescendants = (userId: number, all: User[]): User[] => {
-    const direct = all.filter((e) => e.manager === userId);
-    return [...direct, ...direct.flatMap((d) => getAllDescendants(d.id, all))];
+  const getAllDescendants = (userId: number, all: User[], visited?: Set<number>): User[] => {
+    const seen = visited ?? new Set<number>();
+    if (seen.has(userId)) return [];
+    seen.add(userId);
+    const direct = all.filter((e) => e.manager === userId && !seen.has(e.id));
+    return [...direct, ...direct.flatMap((d) => getAllDescendants(d.id, all, seen))];
   };
 
   const currentManager = allUsers?.find((u) => String(u.id) === managerId);
@@ -78,7 +77,9 @@ export default function Users() {
     const form = new FormData();
     form.append("file", file);
     try {
-      await api.post("/users/import_csv/", form);
+      const resp = await api.post("/users/import_kostango/", form);
+      const msg = `${resp.data.created} utilisateurs importés${resp.data.errors?.length ? " — " + resp.data.errors.slice(0, 3).join(", ") + (resp.data.errors.length > 3 ? "..." : "") : ""}`;
+      show(msg, resp.data.errors?.length ? "error" : "success");
       refetch();
     } catch (err) {
       console.error(err);
@@ -98,7 +99,7 @@ export default function Users() {
           <div className="flex gap-2">
             <label className="inline-flex cursor-pointer items-center gap-2 rounded-md border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary">
               <Upload className="h-4 w-4" />
-              {importing ? "Import..." : "Importer CSV"}
+              {importing ? "Import..." : "Importer"}
               <input type="file" accept=".csv" onChange={handleImport} hidden />
             </label>
             <Button onClick={() => navigate("/users/new")} className="gap-2">
@@ -151,7 +152,7 @@ export default function Users() {
             </Button>
           )}
           <span className="text-muted-foreground">
-            N-1 de {currentManager?.first_name} {currentManager?.last_name}
+            N-1 de {currentManager ? (currentManager.first_name || currentManager.last_name ? `${currentManager.first_name} ${currentManager.last_name}` : currentManager.email) : ""}
           </span>
         </div>
       )}
@@ -249,6 +250,7 @@ export default function Users() {
           </table>
         </CardContent>
       </Card>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
     </AppLayout>
   );
 }

@@ -7,3 +7,4 @@ psycopg[binary]>=3.2,<4
 python-dotenv>=1.1,<2
 Pillow>=11,<12
 weasyprint>=64,<65
+gunicorn>=23,<24
