@@ -2,16 +2,19 @@ from urllib.parse import urlencode
 
 from django.conf import settings
 from django.shortcuts import redirect
+from django.utils.crypto import get_random_string
 import csv
 import io
+
+from mozilla_django_oidc.utils import add_state_and_verifier_and_nonce_to_session
+from mozilla_django_oidc.views import OIDCAuthenticationRequestView as BaseRequestView
+from mozilla_django_oidc.views import OIDCAuthenticationCallbackView as BaseCallback
 
 from rest_framework import filters, generics, permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from mozilla_django_oidc.views import OIDCAuthenticationRequestView as BaseRequestView
-from mozilla_django_oidc.views import OIDCAuthenticationCallbackView as BaseCallback
 
 from django.db import models as db_models
 
@@ -33,10 +36,6 @@ def get_subordinate_ids(user_id):
         ids.add(child_id)
         ids.update(get_subordinate_ids(child_id))
     return ids
-
-
-from django.utils.crypto import get_random_string
-from mozilla_django_oidc.utils import add_state_and_verifier_and_nonce_to_session
 
 class OIDCAuthenticationRequestView(BaseRequestView):
     def get(self, request):

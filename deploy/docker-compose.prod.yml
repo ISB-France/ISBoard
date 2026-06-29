@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${DB_NAME:-isboard}
+      POSTGRES_USER: ${DB_USER:-isboard}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-isboard}
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata-prod:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./app/backend
+      dockerfile: Dockerfile.prod
+    env_file: .env.prod
+    depends_on:
+      db:
+        condition: service_started
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: .
+      dockerfile: app/frontend/Dockerfile.prod
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  pgdata-prod:
