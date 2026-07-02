@@ -67,8 +67,10 @@ AUTH_USER_MODEL = "users.User"
 
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "apps.users.backends.OIDCAuthenticationBackend",
 ]
+
+if os.environ.get("OIDC_CLIENT_ID") and os.environ.get("OIDC_OP_JWKS_ENDPOINT"):
+    AUTHENTICATION_BACKENDS.append("apps.users.backends.OIDCAuthenticationBackend")
 
 OIDC_RP_CLIENT_ID = os.environ.get("OIDC_CLIENT_ID")
 OIDC_RP_CLIENT_SECRET = os.environ.get("OIDC_CLIENT_SECRET")
